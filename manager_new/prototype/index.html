@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru-RU">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Рабочий стол — Купибас · прототип 2027</title>
+  <!-- Оригинальные стили шаблона (из бэкапа) — чтобы проверить, что новый слой корректно их перекрывает -->
+  <link rel="stylesheet" href="../backup/original/bitrix_cache/template_combined.css">
+  <!-- Новый слой -->
+  <link rel="stylesheet" href="manager-2027.css">
+  <script src="manager-2027.js"></script>
+  <style>
+    /* только для прототипа: переключатель экранов */
+    .proto-switch { position: fixed; left: 16px; bottom: 16px; z-index: 3000; display: flex; gap: 4px; padding: 4px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 12px; }
+    .proto-switch a { padding: 6px 10px; border-radius: 7px; color: var(--text-2); }
+    .proto-switch a.on { background: var(--text); color: var(--bg); }
+    [data-screen] { display: none; } body.s-dash [data-screen="dash"], body.s-auth [data-screen="auth"] { display: block; }
+  </style>
+</head>
+<body class="s-dash">
+<div class="page">
+  <!-- Разметка ниже повторяет реальную разметку /manager/ (grid-70 / menu / logo grid-30) -->
+  <div class="grid-70">
+    <h1><span data-screen="dash">Рабочий стол</span><span data-screen="auth">Авторизация</span></h1>
+    <div>
+      <div class="grid-40">
+        <nav class="menu">
+          <ul class="cf">
+            <li class="selected"><a href="/manager/" class="o-btn o-home" title="Рабочий стол">Рабочий стол</a></li>
+            <li><a href="/manager/table/" class="o-btn o-btn-new" title="Добавить предложение">Добавить предложение</a></li>
+            <li><a href="/manager/table/?action=open" class="o-btn o-btn-open" title="Предложения">Предложения</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="grid-60"><div class="k-hello" data-screen="dash"><span class="k-dot"></span>Добрый вечер. 3 предложения ждут ответа клиента.</div></div>
+      <div class="clear"></div>
+    </div>
+  </div>
+  <div class="logo grid-30">
+    <a href="/manager/"><img src="logo.png" alt="Купибас.рф"></a>
+    <div class="offers-rate">
+      Курс евро/руб.: <b>93.5753</b><br>
+      Курс доллар/руб.: <b>83.3707</b>
+      <div class="logo__offer-id" id="js-offer-id-portal"></div>
+    </div>
+  </div>
+  <div class="clear"></div>
+
+  <!-- ================= РАБОЧИЙ СТОЛ (данные — демонстрационные) ================= -->
+  <div data-screen="dash">
+    <div class="k-bento">
+      <div class="k-card">
+        <div class="lbl">Предложений за месяц</div><div class="val">48</div><div class="delta">+12% к октябрю</div>
+        <svg class="spark" viewBox="0 0 90 32"><path class="a" d="M0 26 L15 22 L30 24 L45 15 L60 17 L75 8 L90 6 V32 H0Z"/><path class="l" d="M0 26 L15 22 L30 24 L45 15 L60 17 L75 8 L90 6"/></svg>
+      </div>
+      <div class="k-card">
+        <div class="lbl">Сумма в работе</div><div class="val">14,2 млн ₽</div><div class="delta">+1,8 млн за неделю</div>
+        <svg class="spark" viewBox="0 0 90 32"><path class="a" d="M0 20 L15 24 L30 18 L45 20 L60 12 L75 14 L90 9 V32 H0Z"/><path class="l" d="M0 20 L15 24 L30 18 L45 20 L60 12 L75 14 L90 9"/></svg>
+      </div>
+      <div class="k-ai"><div>
+        <div class="hd"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>Подсказки <span class="chip">AI</span></div>
+        <ul>
+          <li><span>КП <b>№ 2417</b> открыто клиентом 3 раза — хороший момент позвонить</span><a class="go" href="#">Открыть →</a></li>
+          <li><span>Курс € вырос на 0,8% — <b>2 КП</b> в евро стоит пересчитать</span><a class="go" href="#">Пересчитать →</a></li>
+          <li><span><b>Franmer 8×4</b> — заканчивается остаток у поставщика</span><a class="go" href="#">Подробнее →</a></li>
+        </ul>
+      </div></div>
+    </div>
+
+    <div class="k-section-hd">
+      <h2>Последние предложения</h2>
+      <div class="k-seg"><button class="on">Все</button><button>Мои</button><button>Ждут ответа</button></div>
+    </div>
+    <table class="grid">
+      <thead><tr><th>№</th><th>Клиент</th><th>Объект</th><th>Менеджер</th><th>Статус</th><th style="text-align:right">Сумма, ₽</th><th></th></tr></thead>
+      <tbody>
+        <tr class="item"><td class="num" style="text-align:left">2419</td><td>Сергей Волков</td><td>Композитный бассейн 7,5×3,5</td><td><span class="k-avatar" style="background:#6366f1">АК</span>Анна К.</td><td><span class="k-status new">Новое</span></td><td class="num">1 284 500</td><td><a class="k-icon-btn" href="#" title="PDF">⤓</a></td></tr>
+        <tr class="item"><td class="num" style="text-align:left">2418</td><td>ООО «Аквадом»</td><td>Плёнка Alkorplan, 240 м²</td><td><span class="k-avatar" style="background:#0ea5e9">ДМ</span>Дмитрий М.</td><td><span class="k-status wait">Ждёт ответа</span></td><td class="num">612 040</td><td><a class="k-icon-btn" href="#">⤓</a></td></tr>
+        <tr class="item"><td class="num" style="text-align:left">2417</td><td>Ирина Белова</td><td>Franmer 8×4, оборудование</td><td><span class="k-avatar" style="background:#6366f1">АК</span>Анна К.</td><td><span class="k-status wait">Ждёт ответа</span></td><td class="num">2 975 000</td><td><a class="k-icon-btn" href="#">⤓</a></td></tr>
+        <tr class="item"><td class="num" style="text-align:left">2416</td><td>Коттедж «Сосны»</td><td>Теплообменник, насосная группа</td><td><span class="k-avatar" style="background:#ec4899">ЕП</span>Елена П.</td><td><span class="k-status ok">Заказ</span></td><td class="num">348 900</td><td><a class="k-icon-btn" href="#">⤓</a></td></tr>
+        <tr class="item"><td class="num" style="text-align:left">2415</td><td>Павел Орлов</td><td>Подогрев, химия на сезон</td><td><span class="k-avatar" style="background:#0ea5e9">ДМ</span>Дмитрий М.</td><td><span class="k-status">Черновик</span></td><td class="num">96 300</td><td><a class="k-icon-btn" href="#">⤓</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ================= АВТОРИЗАЦИЯ (реальная разметка bx-authform) ================= -->
+  <div data-screen="auth">
+    <div class="bx-authform">
+      <h3 class="bx-title">Вход для менеджеров</h3>
+      <div class="bx-sub">Используйте учётную запись сайта</div>
+      <form name="form_auth" onsubmit="return false">
+        <div class="bx-authform-formgroup-container"><div class="bx-authform-label-container">Логин</div><div class="bx-authform-input-container"><input type="text" name="USER_LOGIN"></div></div>
+        <div class="bx-authform-formgroup-container"><div class="bx-authform-label-container">Пароль</div><div class="bx-authform-input-container"><input type="password" name="USER_PASSWORD"></div></div>
+        <div class="bx-authform-formgroup-container"><label class="bx-filter-param-label"><input type="checkbox"> <span class="bx-filter-param-text">Запомнить меня на этом компьютере</span></label></div>
+        <div class="bx-authform-formgroup-container"><input type="submit" class="btn btn-primary" value="Войти"></div>
+      </form>
+      <hr class="bxe-light">
+      <div class="bx-authform-link-container"><a href="#"><b>Забыли свой пароль?</b></a></div>
+    </div>
+  </div>
+</div>
+
+<div class="proto-switch">
+  <a href="#" class="on" onclick="document.body.className='s-dash';this.className='on';this.nextElementSibling.className='';return false">Рабочий стол</a>
+  <a href="#" onclick="document.body.className='s-auth';this.className='on';this.previousElementSibling.className='';return false">Вход</a>
+</div>
+</body>
+</html>
