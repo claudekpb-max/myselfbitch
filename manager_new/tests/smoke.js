@@ -256,6 +256,207 @@ async function testKp(ctx, label) {
   await page.close();
 }
 
+async function testMainExtra(ctx, label) {
+  const p = await openPage(ctx, 'manager-claude.html');
+  const { page } = p;
+  await check(page, label, 'фильтр «Мои» и «Ждут ответа» реально фильтрует', async () => {
+    await page.click('#flt [data-f="my"]');
+    let vis = await page.$$eval('tbody tr[data-kp]:not(.hide)', r => r.length); assert(vis === 2, `Мои: ${vis}`);
+    await page.click('#flt [data-f="wait"]');
+    vis = await page.$$eval('tbody tr[data-kp]:not(.hide)', r => r.length); assert(vis === 2, `Ждут ответа: ${vis}`);
+    await page.click('#flt [data-f="all"]');
+    vis = await page.$$eval('tbody tr[data-kp]:not(.hide)', r => r.length); assert(vis === 5, `Все: ${vis}`);
+  });
+  await check(page, label, 'счётчик задач меняется', async () => {
+    const before = await page.textContent('#task-cnt');
+    await page.locator('.task').first().click();
+    const after = await page.textContent('#task-cnt');
+    assert(before !== after, `${before} → ${after}`);
+  });
+  await check(page, label, '«Позже» скрывает подсказку', async () => {
+    const n = await page.$$eval('.tip:not(.gone)', x => x.length);
+    await page.locator('[data-later]').first().click();
+    const m = await page.$$eval('.tip:not(.gone)', x => x.length);
+    assert(m === n - 1, `${n} → ${m}`);
+  });
+  await check(page, label, 'кнопка копирования в строке не открывает шторку', async () => {
+    await page.locator('tbody tr[data-kp] [data-row-copy]').first().click({ force: true });
+    await page.waitForSelector('#toast.show', { timeout: 1000 });
+    assert(!(await page.$('#drawer.open')), 'открылась шторка');
+  });
+  await check(page, label, 'композер: номер КП открывает шторку', async () => {
+    await page.fill('.composer textarea', 'КП 2418');
+    await page.keyboard.press('Enter');
+    await page.waitForSelector('#drawer.open', { timeout: 1000 });
+    assert((await page.textContent('#d-no')).includes('2418'), 'не та шторка');
+    await page.keyboard.press('Escape');
+  });
+  await check(page, label, 'композер: «керамогранит перелив» ведёт в конструктор с нужным шаблоном', async () => {
+    await page.fill('.composer textarea', 'бассейн керамогранит переливной 10 на 4');
+    await Promise.all([page.waitForURL(/offer\.html\?tpl=tile-ovf/), page.keyboard.press('Enter')]);
+    await page.goBack(); await page.waitForTimeout(200);
+  });
+  await check(page, label, '«Новое предложение» ведёт в конструктор', async () => {
+    const href = await page.locator('.new-btn').getAttribute('href'); assert(href === 'offer.html', href);
+  });
+  await page.close();
+}
+
+async function testOffer(ctx, label) {
+  await ctx.addInitScript(() => { try { if (!localStorage.getItem('kb-test-clean')) { localStorage.removeItem('kb-offer-draft-v1'); localStorage.removeItem('kb-works-v1'); localStorage.removeItem('kb-cat-accepted-v1'); localStorage.setItem('kb-test-clean', '1'); } } catch (e) {} });
+  const p = await openPage(ctx, 'offer.html');
+  const { page } = p;
+  await common(label, p);
+  const total = () => page.evaluate(() => +document.querySelector('#tot').textContent.replace(/[^\d]/g, ''));
+  await check(page, label, '8 вкладок шаблонов с правильными названиями', async () => {
+    const names = await page.$$eval('#tabs button', b => b.map(x => x.textContent.replace(/^\d+/, '').trim()));
+    const want = ['Фарол', 'Франмер', 'Маршал', 'Бетон плёнка бюджет', 'Бетон плёнка 3D', 'Бетон керамогранит скиммерный', 'Керамогранит переливной', 'Биодизайн'];
+    assert(JSON.stringify(names) === JSON.stringify(want), names.join(', '));
+  });
+  await check(page, label, 'каждый шаблон применяется и даёт ненулевой итог', async () => {
+    const n = await page.locator('#tabs button').count();
+    for (let i = 0; i < n; i++) {
+      const b = page.locator('#tabs button').nth(i);
+      if (await b.evaluate(x => x.classList.contains('on'))) continue;
+      await b.click(); await page.waitForSelector('#m-confirm.open', { timeout: 1000 });
+      await page.click('#confirm-ok');
+      assert(await b.evaluate(x => x.classList.contains('on')), 'вкладка не активна');
+      const t = await total(); assert(t > 100000, `итог ${t} у шаблона ${i + 1}`);
+      const rows = await page.$$eval('tr[data-row]', r => r.length); assert(rows >= 8, `позиций ${rows}`);
+    }
+  });
+  await check(page, label, 'отмена смены шаблона ничего не меняет', async () => {
+    const t0 = await total();
+    await page.locator('#tabs button').first().click(); await page.waitForSelector('#m-confirm.open');
+    await page.locator('#m-confirm [data-close]').last().click();
+    assert(await total() === t0, 'итог изменился');
+  });
+  await check(page, label, 'размеры пересчитывают количества и итог', async () => {
+    await page.locator('#tabs button', { hasText: 'Бетон плёнка бюджет' }).click(); await page.click('#confirm-ok');
+    const t0 = await total();
+    await page.fill('#f-L', '10'); await page.waitForTimeout(100);
+    const t1 = await total(); assert(t1 > t0, `${t0} → ${t1}`);
+    const s = await page.textContent('#metrics'); assert(/40 м²/.test(s), 'зеркало не 40 м²: ' + s);
+  });
+  await check(page, label, 'сумма разделов = итог; скидка считается', async () => {
+    const r = await page.evaluate(() => { const n = s => +s.replace(/[^\d]/g, ''); const secs = [...document.querySelectorAll('.sec .sum')].map(x => n(x.textContent)); return { secs, tot: n(document.querySelector('#tot').textContent) }; });
+    const sum = r.secs.reduce((a, b) => a + b, 0); assert(sum === r.tot, `${sum} ≠ ${r.tot}`);
+    await page.fill('#f-disc', '10'); await page.waitForTimeout(50);
+    const t = await total(); assert(Math.abs(t - Math.round(sum * 0.9)) <= 1, `со скидкой ${t}, ожидали ${Math.round(sum * 0.9)}`);
+    await page.fill('#f-disc', '0');
+  });
+  await check(page, label, 'ручное количество и возврат к формуле', async () => {
+    const q = page.locator('[data-qty]').first();
+    await q.fill('3'); await q.press('Tab');
+    assert(await page.locator('[data-q-reset]').count() >= 1, 'нет кнопки «вернуть»');
+    await page.locator('[data-q-reset]').first().click();
+    assert(await page.locator('[data-q-reset]').count() === 0, 'кнопка не исчезла');
+  });
+  await check(page, label, 'добавление товара из каталога поиском и Enter', async () => {
+    const n0 = await page.$$eval('tr[data-row]', r => r.length);
+    await page.locator('[data-add="extra"][data-kind="cat"]').click();
+    await page.waitForSelector('#m-pick.open');
+    await page.fill('#pick-q', 'химии на сезон');
+    await page.keyboard.press('Enter');
+    const n1 = await page.$$eval('tr[data-row]', r => r.length); assert(n1 === n0 + 1, `${n0} → ${n1}`);
+    assert(await page.locator('.sec[data-sec="extra"] tr[data-row]').count() === 1, 'не в разделе «Дополнительно»');
+  });
+  await check(page, label, 'удаление позиции и отмена Ctrl+Z', async () => {
+    const n0 = await page.$$eval('tr[data-row]', r => r.length);
+    await page.locator('[data-del]').last().click();
+    assert(await page.$$eval('tr[data-row]', r => r.length) === n0 - 1, 'не удалилось');
+    await page.locator('body').click({ position: { x: 2, y: 300 } });
+    await page.keyboard.press('Control+z');
+    assert(await page.$$eval('tr[data-row]', r => r.length) === n0, 'не вернулось');
+  });
+  await check(page, label, 'сверка с 1С отмечает расхождения и принимает цену', async () => {
+    await page.locator('#tabs button', { hasText: 'Бетон керамогранит скиммерный' }).click(); await page.click('#confirm-ok');
+    await page.click('#btn-1c');
+    await page.waitForSelector('[data-take1c]', { timeout: 3000 });
+    const n = await page.locator('[data-take1c]').count(); assert(n >= 1, 'нет расхождений');
+    await page.locator('#btn-apply1c').click();
+    assert(await page.locator('[data-take1c]').count() === 0, 'расхождения остались');
+  });
+  await check(page, label, 'без клиента сохранить нельзя; с клиентом — черновик переживает перезагрузку', async () => {
+    await page.fill('#f-client', '');
+    await page.click('#btn-save');
+    assert(await page.locator('#f-client.bad').count() === 1, 'нет подсветки поля');
+    await page.fill('#f-client', 'Тест Клиентов');
+    await page.click('#btn-save');
+    const t0 = await total();
+    await page.reload(); await page.waitForTimeout(200);
+    assert(await page.inputValue('#f-client') === 'Тест Клиентов', 'клиент не восстановился');
+    assert(await total() === t0, 'итог не восстановился');
+  });
+  await check(page, label, 'предпросмотр показывает итог', async () => {
+    await page.click('#btn-preview'); await page.waitForSelector('#m-preview.open');
+    const pv = await page.textContent('#pv'); const t = await page.textContent('#tot');
+    assert(pv.includes(t.trim()), 'итог в предпросмотре не совпадает');
+    await page.keyboard.press('Escape');
+  });
+  await check(page, label, 'модель композитной чаши меняет размеры', async () => {
+    await page.locator('#tabs button', { hasText: 'Фарол' }).click(); await page.click('#confirm-ok');
+    assert(await page.locator('#f-L').isDisabled(), 'размеры редактируемые');
+    await page.selectOption('#f-model', 'FAR-800');
+    assert(await page.inputValue('#f-L') === '8', 'длина ' + await page.inputValue('#f-L'));
+  });
+  await page.close();
+}
+
+async function testSprav(ctx, label) {
+  const p = await openPage(ctx, 'spravochnik.html');
+  const { page } = p;
+  await common(label, p);
+  await check(page, label, 'изменение расценки сохраняется и подхватывается конструктором', async () => {
+    await page.fill('#w-q', 'котлован');
+    const inp = page.locator('tr[data-id="w-dig"] [data-f="price"]');
+    await inp.fill('1500');
+    assert(!(await page.locator('#w-save').isDisabled()), 'кнопка сохранения неактивна');
+    await page.click('#w-save');
+    assert(await page.locator('#w-save').isDisabled(), 'после сохранения кнопка активна');
+    await page.reload(); await page.waitForTimeout(200);
+    await page.fill('#w-q', 'котлован');
+    assert(await page.locator('tr[data-id="w-dig"] [data-f="price"]').inputValue() === '1500', 'цена не сохранилась');
+    const o = await ctx.newPage(); await o.goto(BASE + 'offer.html'); await o.waitForTimeout(200);
+    const price = await o.locator('tr[data-row]').filter({ hasText: 'Разработка котлована' }).locator('[data-price]').inputValue();
+    assert(price === '1500', 'конструктор взял ' + price); await o.close();
+  });
+  await check(page, label, 'добавление работы, проверка обязательных полей, удаление', async () => {
+    await page.fill('#w-q', '');
+    const n0 = await page.locator('tr[data-id]').count();
+    await page.click('#w-add');
+    await page.click('#w-save');
+    assert(await page.locator('[data-f="name"].bad').count() === 1, 'пустое название не подсвечено');
+    await page.locator('tr[data-id]').first().locator('[data-f="name"]').fill('Демонтаж старой чаши');
+    await page.click('#w-save');
+    await page.reload(); await page.waitForTimeout(200);
+    assert(await page.locator('tr[data-id]').count() === n0 + 1, 'новая работа не сохранилась');
+    await page.locator('tr[data-id]').first().locator('[data-wdel]').click();
+    await page.click('#w-save');
+    assert(await page.locator('tr[data-id]').count() === n0, 'не удалилась');
+  });
+  await check(page, label, '«Отменить» возвращает несохранённые правки', async () => {
+    const inp = page.locator('tr[data-id="w-out"] [data-f="price"]'); const v0 = await inp.inputValue();
+    await inp.fill('999'); await page.click('#w-cancel');
+    assert(await page.locator('tr[data-id="w-out"] [data-f="price"]').inputValue() === v0, 'не вернулось');
+  });
+  await check(page, label, 'каталог: сверка с 1С, фильтр расхождений, принятие цены', async () => {
+    await page.click('[data-tab="catalog"]');
+    await page.click('#c-reset');
+    await page.click('#c-check'); await page.waitForSelector('[data-accept]', { timeout: 3000 });
+    await page.check('#c-mis');
+    const n = await page.locator('#c-tbl tbody tr.mis').count(); assert(n >= 3, `расхождений ${n}`);
+    await page.locator('[data-accept]').first().click();
+    assert(await page.locator('#c-tbl tbody tr.mis').count() === n - 1, 'не принялась');
+    await page.click('#c-reset');
+  });
+  await check(page, label, 'ссылка #catalog открывает вкладку каталога', async () => {
+    await page.goto(BASE + 'spravochnik.html#catalog'); await page.waitForTimeout(150);
+    assert(await page.locator('#p-catalog').isVisible(), 'каталог не открыт');
+  });
+  await page.close();
+}
+
 (async () => {
   const browser = await chromium.launch();
   const configs = [
@@ -268,6 +469,9 @@ async function testKp(ctx, label) {
     await testMain(ctx, `главная (manager-claude.html) · ${dev}`);
     await testIndex(ctx, `слой Битрикса (index.html) · ${dev}`);
     await testKp(ctx, `КП клиента (kp.html) · ${dev}`);
+    await testMainExtra(ctx, `главная — детали · ${dev}`);
+    await testOffer(ctx, `конструктор КП (offer.html) · ${dev}`);
+    await testSprav(ctx, `справочник (spravochnik.html) · ${dev}`);
     await ctx.close();
   }
   await browser.close();

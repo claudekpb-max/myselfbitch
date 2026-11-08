@@ -9,7 +9,9 @@
 ## Проекты в «код»
 - `manager_new/` — рабочая копия редизайна kupibas.ru/manager/ «2027»
   (оригинал: папка «менеджер» на Диске, бэкап шаблона — там же в `backup/original/`).
-  - `prototype/` — index.html, manager-2027.css/js, kp.html, kp.src.html, manager-claude.html, claude-style.src.html, build.py, logo.png
+  - `prototype/` — manager-claude.html (главная, собирается build.py из claude-style.src.html), offer.html (конструктор КП, 8 шаблонов), spravochnik.html (работы/расценки, каталог и цены 1С), kp.html (КП клиента), index.html + manager-2027.css/js (слой для Битрикса), kb-data.js / kb-ui.css (общие данные и стили)
+  - `для-теста/` — самодостаточная копия для скачивания и открытия с диска (СТАРТ.html); на Google Диске: код/manager_new/для-теста
+  - `tests/smoke.js` — Playwright-проверка всех страниц: из manager_new `python3 -m http.server 8765`, затем `node tests/smoke.js`
   - `tools/bx.py` — запуск PHP через админку Битрикса (логин/пароль только из env `BX_USER`/`BX_PASS`, никогда не в коде и не в чате)
 - `собственный-пляж/` — под копию лендинга собственный-пляж.рф (Битрикс, kupibas). Пока пусто: ждём архив резервной копии из админки.
 

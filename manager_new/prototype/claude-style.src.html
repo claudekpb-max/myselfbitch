@@ -227,6 +227,17 @@ tbody tr:hover .row-act{opacity:1}
 .proto{position:fixed;right:16px;bottom:16px;z-index:40;display:flex;gap:2px;padding:3px;border-radius:11px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-lg);font-size:12.5px}
 .proto button{border:0;background:transparent;padding:6px 11px;border-radius:8px;color:var(--text-2)}
 .proto button.on{background:var(--text);color:var(--bg)}
+.app.mini{grid-template-columns:72px 1fr}
+.app.mini .side{padding:14px 8px}
+.app.mini .brand{flex-direction:column;gap:8px;padding:6px 0 14px}
+.app.mini .brand a,.app.mini .side h6,.app.mini .recent,.app.mini .rates,.app.mini .me .who{display:none}
+.app.mini .new-btn,.app.mini .nav a{font-size:0;justify-content:center;gap:0;padding:9px 0}
+.app.mini .nav a .cnt{display:none}
+.app.mini .me{justify-content:center}
+.app.mini .collapse svg{transform:scaleX(-1)}
+.tip.gone{display:none}
+tbody tr.hide{display:none}
+.tbl-tools .btn{display:inline-flex;align-items:center}
 .screen{display:none} .screen.on{display:block}
 .app.screen.on{display:grid}
 
@@ -235,6 +246,16 @@ tbody tr:hover .row-act{opacity:1}
   .kpis{grid-template-columns:repeat(2,1fr)} .grid2{grid-template-columns:1fr}
   .search-btn{min-width:0} .search-btn span{display:none}
   .hero h1{font-size:30px}
+  .tbl{overflow-x:auto}
+}
+@media (max-width:700px){
+  .wrap{padding:18px 14px 90px}
+  .tbl th:nth-child(3),.tbl td:nth-child(3){display:none}
+  th,td{padding:11px 10px}
+  .row-act{gap:0}
+  .sec-hd{flex-wrap:wrap;gap:10px}
+  .kpis{gap:8px} .kpi .v{font-size:24px}
+  .composer{padding:12px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 
@@ -327,6 +348,7 @@ tbody tr:hover .row-act{opacity:1}
   <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
 </svg>
 
@@ -334,24 +356,25 @@ tbody tr:hover .row-act{opacity:1}
 <div class="app screen on" id="s-dash">
   <aside class="side">
     <div class="brand">
-      <a href="/manager/"><img src="{{LOGO}}" alt="Купибас"></a>
-      <button class="collapse" title="Свернуть"><svg class="ic"><use href="#i-panel"/></svg></button>
+      <a href="manager-claude.html"><img src="{{LOGO}}" alt="Купибас"></a>
+      <button class="collapse" title="Свернуть панель" data-collapse><svg class="ic"><use href="#i-panel"/></svg></button>
     </div>
-    <a class="new-btn" href="/manager/table/"><span class="plus"><svg class="ic" style="width:15px;height:15px;stroke-width:2.2"><use href="#i-plus"/></svg></span>Новое предложение</a>
+    <a class="new-btn" href="offer.html"><span class="plus"><svg class="ic" style="width:15px;height:15px;stroke-width:2.2"><use href="#i-plus"/></svg></span>Новое предложение</a>
     <nav class="nav">
-      <a class="on" href="/manager/"><svg class="ic"><use href="#i-home"/></svg>Рабочий стол</a>
-      <a href="/manager/table/?action=open"><svg class="ic"><use href="#i-list"/></svg>Предложения<span class="cnt">1 284</span></a>
+      <a class="on" href="manager-claude.html"><svg class="ic"><use href="#i-home"/></svg>Рабочий стол</a>
+      <a href="#offers" data-scroll-offers><svg class="ic"><use href="#i-list"/></svg>Предложения<span class="cnt">1 284</span></a>
+      <a href="spravochnik.html"><svg class="ic"><use href="#i-book"/></svg>Справочник</a>
       <a href="#" data-pal><svg class="ic"><use href="#i-search"/></svg>Поиск<span class="cnt">⌘K</span></a>
     </nav>
     <h6>Недавние</h6>
     <div class="recent">
-      <a href="#"><b>2419</b>Волков — композит 7,5×3,5</a>
-      <a href="#"><b>2418</b>Аквадом — Alkorplan 240 м²</a>
-      <a href="#"><b>2417</b>Белова — Franmer 8×4</a>
-      <a href="#"><b>2416</b>Коттедж «Сосны» — насосная</a>
-      <a href="#"><b>2415</b>Орлов — подогрев и химия</a>
-      <a href="#"><b>2412</b>Гостиница «Лесная» — СПА</a>
-      <a href="#"><b>2409</b>Кравец — павильон</a>
+      <a href="#" data-kp-open="2419"><b>2419</b>Волков — композит 7,5×3,5</a>
+      <a href="#" data-kp-open="2418"><b>2418</b>Аквадом — Alkorplan 240 м²</a>
+      <a href="#" data-kp-open="2417"><b>2417</b>Белова — Franmer 8×4</a>
+      <a href="#" data-kp-open="2416"><b>2416</b>Коттедж «Сосны» — насосная</a>
+      <a href="#" data-kp-open="2415"><b>2415</b>Орлов — подогрев и химия</a>
+      <a href="#" data-kp-open="2412"><b>2412</b>Гостиница «Лесная» — СПА</a>
+      <a href="#" data-kp-open="2409"><b>2409</b>Кравец — павильон</a>
     </div>
     <div class="rates">
       <div class="rate"><small>EUR / ₽</small><b>93,58</b><i>↑0,8%</i></div>
@@ -380,19 +403,19 @@ tbody tr:hover .row-act{opacity:1}
       <div class="composer">
         <textarea rows="2" placeholder="Найдите предложение, клиента или товар — или опишите новое КП…"></textarea>
         <div class="row">
-          <button class="chip-btn"><svg class="ic"><use href="#i-clip"/></svg>Смета из файла</button>
-          <button class="chip-btn"><svg class="ic"><use href="#i-euro"/></svg>EUR</button>
-          <button class="send" title="Отправить"><svg class="ic" style="stroke-width:2.2"><use href="#i-up"/></svg></button>
+          <button class="chip-btn" data-file><svg class="ic"><use href="#i-clip"/></svg>Смета из файла</button><input type="file" id="file-in" accept=".xlsx,.xls,.csv,.pdf" hidden>
+          <button class="chip-btn" data-cur><svg class="ic"><use href="#i-euro"/></svg><span>EUR</span></button>
+          <button class="send" title="Отправить (Enter)" data-send-q><svg class="ic" style="stroke-width:2.2"><use href="#i-up"/></svg></button>
         </div>
       </div>
       <div class="suggest">
-        <button><svg class="ic"><use href="#i-plus"/></svg>Новое КП на бассейн</button>
-        <button><svg class="ic"><use href="#i-euro"/></svg>Пересчитать по курсу</button>
-        <button><svg class="ic"><use href="#i-box"/></svg>Проверить остатки</button>
-        <button><svg class="ic"><use href="#i-pdf"/></svg>Выгрузить в PDF</button>
+        <button data-go="offer.html"><svg class="ic"><use href="#i-plus"/></svg>Новое КП на бассейн</button>
+        <button data-recalc><svg class="ic"><use href="#i-euro"/></svg>Пересчитать по курсу</button>
+        <button data-go="spravochnik.html#catalog"><svg class="ic"><use href="#i-box"/></svg>Проверить остатки и цены 1С</button>
+        <button data-go-new="kp.html"><svg class="ic"><use href="#i-pdf"/></svg>Выгрузить в PDF</button>
       </div>
 
-      <div class="sec-hd"><h2>Ноябрь</h2><a href="#">Отчёт за месяц →</a></div>
+      <div class="sec-hd"><h2>Ноябрь</h2><a href="#" data-toast="Отчёт за ноябрь формируется — придёт на почту">Отчёт за месяц →</a></div>
       <div class="kpis">
         <div class="kpi"><small>Предложений</small><div class="v">48</div><div class="d">+12% к октябрю</div>
           <svg class="sl" width="84" height="30" viewBox="0 0 84 30"><path class="a" d="M0 24 14 20 28 22 42 13 56 15 70 7 84 5V30H0Z"/><path class="l" d="M0 24 14 20 28 22 42 13 56 15 70 7 84 5"/></svg></div>
@@ -407,16 +430,16 @@ tbody tr:hover .row-act{opacity:1}
           <div class="hd"><svg class="spark"><use href="#spark"/></svg><b>Что важно сегодня</b><span>обновлено 18:30</span></div>
           <div class="tip"><div class="dot"><svg class="ic"><use href="#i-phone"/></svg></div><div>
             <p>Клиент открыл КП <b>№ 2417</b> три раза за сутки — хороший момент позвонить.</p>
-            <div class="act"><button class="pri" data-open-kp="2417">Открыть КП</button><button>Позже</button></div></div></div>
+            <div class="act"><button class="pri" data-open-kp="2417">Открыть КП</button><button data-later>Позже</button></div></div></div>
           <div class="tip"><div class="dot"><svg class="ic"><use href="#i-euro"/></svg></div><div>
             <p>Евро вырос на 0,8%. <b>2 предложения</b> в евро стоит пересчитать до отправки.</p>
-            <div class="act"><button class="pri">Пересчитать</button><button>Показать</button></div></div></div>
+            <div class="act"><button class="pri" data-recalc>Пересчитать</button><button data-show-eur>Показать</button></div></div></div>
           <div class="tip"><div class="dot"><svg class="ic"><use href="#i-box"/></svg></div><div>
             <p><b>Franmer 8×4</b> заканчивается у поставщика — осталось 2 шт.</p>
-            <div class="act"><button>Подробнее</button></div></div></div>
+            <div class="act"><button data-go="spravochnik.html#catalog">Подробнее</button><button data-later>Скрыть</button></div></div></div>
         </div>
         <div class="card tasks">
-          <div class="hd">Задачи <small>3 из 5</small></div>
+          <div class="hd">Задачи <small id="task-cnt">2 из 5</small></div>
           <label class="task"><input type="checkbox"><div>Перезвонить Беловой по КП 2417<small>сегодня, 19:00</small></div></label>
           <label class="task"><input type="checkbox"><div>Отправить счёт «Аквадом»<small>завтра</small></div></label>
           <label class="task"><input type="checkbox" checked><div>Уточнить сроки поставки Alkorplan<small>выполнено</small></div></label>
@@ -425,20 +448,20 @@ tbody tr:hover .row-act{opacity:1}
         </div>
       </div>
 
-      <div class="sec-hd"><h2>Последние предложения</h2>
-        <div class="tbl-tools"><div class="seg"><button class="on">Все</button><button>Мои</button><button>Ждут ответа</button></div></div></div>
+      <div class="sec-hd" id="offers"><h2>Последние предложения</h2>
+        <div class="tbl-tools"><div class="seg" id="flt"><button class="on" data-f="all">Все</button><button data-f="my">Мои</button><button data-f="wait">Ждут ответа</button></div><a class="btn" href="offer.html" style="padding:6px 12px;font-size:13px">+ Новое</a></div></div>
       <div class="card tbl">
         <table>
           <thead><tr><th>№</th><th>Клиент</th><th>Менеджер</th><th>Статус</th><th style="text-align:right">Сумма, ₽</th><th></th></tr></thead>
           <tbody>
-            <tr data-kp="2419" data-client="Сергей Волков"><td class="id">2419</td><td class="cl"><b>Сергей Волков</b><small>Композитный бассейн 7,5×3,5</small></td><td><div class="mgr"><span class="avatar" style="background:#6b5b4e">АК</span>Анна К.</div></td><td><span class="st new">Новое</span></td><td class="num">1 284 500</td><td><div class="row-act"><button class="icon-btn max-btn" title="Отправить в МАКС" data-max><svg class="ic"><use href="#i-send"/></svg></button><button class="icon-btn" title="PDF"><svg class="ic"><use href="#i-pdf"/></svg></button><button class="icon-btn" title="Копировать"><svg class="ic"><use href="#i-copy"/></svg></button><button class="icon-btn"><svg class="ic"><use href="#i-more"/></svg></button></div></td></tr>
-            <tr data-kp="2418" data-client="ООО «Аквадом»"><td class="id">2418</td><td class="cl"><b>ООО «Аквадом»</b><small>Плёнка Alkorplan, 240 м²</small></td><td><div class="mgr"><span class="avatar" style="background:#4e6b5e">ДМ</span>Дмитрий М.</div></td><td><span class="st wait">Ждёт ответа</span></td><td class="num">612 040</td><td><div class="row-act"><button class="icon-btn max-btn" title="Отправить в МАКС" data-max><svg class="ic"><use href="#i-send"/></svg></button><button class="icon-btn"><svg class="ic"><use href="#i-pdf"/></svg></button><button class="icon-btn"><svg class="ic"><use href="#i-copy"/></svg></button><button class="icon-btn"><svg class="ic"><use href="#i-more"/></svg></button></div></td></tr>
-            <tr data-kp="2417" data-client="Ирина Белова"><td class="id">2417</td><td class="cl"><b>Ирина Белова</b><small>Franmer 8×4, оборудование</small></td><td><div class="mgr"><span class="avatar" style="background:#6b5b4e">АК</span>Анна К.</div></td><td><span class="st seen">Просмотрено · 3</span></td><td class="num">2 975 000</td><td><div class="row-act"><button class="icon-btn max-btn" title="Отправить в МАКС" data-max><svg class="ic"><use href="#i-send"/></svg></button><button class="icon-btn"><svg class="ic"><use href="#i-pdf"/></svg></button><button class="icon-btn"><svg class="ic"><use href="#i-copy"/></svg></button><button class="icon-btn"><svg class="ic"><use href="#i-more"/></svg></button></div></td></tr>
-            <tr data-kp="2416" data-client="Коттедж «Сосны»"><td class="id">2416</td><td class="cl"><b>Коттедж «Сосны»</b><small>Теплообменник, насосная группа</small></td><td><div class="mgr"><span class="avatar" style="background:#8a5a44">ЕП</span>Елена П.</div></td><td><span class="st ok">Заказ</span></td><td class="num">348 900</td><td><div class="row-act"><button class="icon-btn max-btn" title="Отправить в МАКС" data-max><svg class="ic"><use href="#i-send"/></svg></button><button class="icon-btn"><svg class="ic"><use href="#i-pdf"/></svg></button><button class="icon-btn"><svg class="ic"><use href="#i-copy"/></svg></button><button class="icon-btn"><svg class="ic"><use href="#i-more"/></svg></button></div></td></tr>
-            <tr data-kp="2415" data-client="Павел Орлов"><td class="id">2415</td><td class="cl"><b>Павел Орлов</b><small>Подогрев, химия на сезон</small></td><td><div class="mgr"><span class="avatar" style="background:#4e6b5e">ДМ</span>Дмитрий М.</div></td><td><span class="st">Черновик</span></td><td class="num">96 300</td><td><div class="row-act"><button class="icon-btn max-btn" title="Отправить в МАКС" data-max><svg class="ic"><use href="#i-send"/></svg></button><button class="icon-btn"><svg class="ic"><use href="#i-pdf"/></svg></button><button class="icon-btn"><svg class="ic"><use href="#i-copy"/></svg></button><button class="icon-btn"><svg class="ic"><use href="#i-more"/></svg></button></div></td></tr>
+            <tr data-kp="2419" data-client="Сергей Волков"><td class="id">2419</td><td class="cl"><b>Сергей Волков</b><small>Композитный бассейн 7,5×3,5</small></td><td><div class="mgr"><span class="avatar" style="background:#6b5b4e">АК</span>Анна К.</div></td><td><span class="st new">Новое</span></td><td class="num">1 284 500</td><td><div class="row-act"><button class="icon-btn max-btn" title="Отправить в МАКС" data-max><svg class="ic"><use href="#i-send"/></svg></button><button class="icon-btn" title="PDF" data-row-pdf><svg class="ic"><use href="#i-pdf"/></svg></button><button class="icon-btn" title="Копировать ссылку" data-row-copy><svg class="ic"><use href="#i-copy"/></svg></button><button class="icon-btn" title="Создать на основе" data-row-dup><svg class="ic"><use href="#i-more"/></svg></button></div></td></tr>
+            <tr data-kp="2418" data-client="ООО «Аквадом»"><td class="id">2418</td><td class="cl"><b>ООО «Аквадом»</b><small>Плёнка Alkorplan, 240 м²</small></td><td><div class="mgr"><span class="avatar" style="background:#4e6b5e">ДМ</span>Дмитрий М.</div></td><td><span class="st wait">Ждёт ответа</span></td><td class="num">612 040</td><td><div class="row-act"><button class="icon-btn max-btn" title="Отправить в МАКС" data-max><svg class="ic"><use href="#i-send"/></svg></button><button class="icon-btn" title="PDF" data-row-pdf><svg class="ic"><use href="#i-pdf"/></svg></button><button class="icon-btn" title="Копировать ссылку" data-row-copy><svg class="ic"><use href="#i-copy"/></svg></button><button class="icon-btn" title="Создать на основе" data-row-dup><svg class="ic"><use href="#i-more"/></svg></button></div></td></tr>
+            <tr data-kp="2417" data-client="Ирина Белова"><td class="id">2417</td><td class="cl"><b>Ирина Белова</b><small>Franmer 8×4, оборудование</small></td><td><div class="mgr"><span class="avatar" style="background:#6b5b4e">АК</span>Анна К.</div></td><td><span class="st seen">Просмотрено · 3</span></td><td class="num">2 975 000</td><td><div class="row-act"><button class="icon-btn max-btn" title="Отправить в МАКС" data-max><svg class="ic"><use href="#i-send"/></svg></button><button class="icon-btn" title="PDF" data-row-pdf><svg class="ic"><use href="#i-pdf"/></svg></button><button class="icon-btn" title="Копировать ссылку" data-row-copy><svg class="ic"><use href="#i-copy"/></svg></button><button class="icon-btn" title="Создать на основе" data-row-dup><svg class="ic"><use href="#i-more"/></svg></button></div></td></tr>
+            <tr data-kp="2416" data-client="Коттедж «Сосны»"><td class="id">2416</td><td class="cl"><b>Коттедж «Сосны»</b><small>Теплообменник, насосная группа</small></td><td><div class="mgr"><span class="avatar" style="background:#8a5a44">ЕП</span>Елена П.</div></td><td><span class="st ok">Заказ</span></td><td class="num">348 900</td><td><div class="row-act"><button class="icon-btn max-btn" title="Отправить в МАКС" data-max><svg class="ic"><use href="#i-send"/></svg></button><button class="icon-btn" title="PDF" data-row-pdf><svg class="ic"><use href="#i-pdf"/></svg></button><button class="icon-btn" title="Копировать ссылку" data-row-copy><svg class="ic"><use href="#i-copy"/></svg></button><button class="icon-btn" title="Создать на основе" data-row-dup><svg class="ic"><use href="#i-more"/></svg></button></div></td></tr>
+            <tr data-kp="2415" data-client="Павел Орлов"><td class="id">2415</td><td class="cl"><b>Павел Орлов</b><small>Подогрев, химия на сезон</small></td><td><div class="mgr"><span class="avatar" style="background:#4e6b5e">ДМ</span>Дмитрий М.</div></td><td><span class="st">Черновик</span></td><td class="num">96 300</td><td><div class="row-act"><button class="icon-btn max-btn" title="Отправить в МАКС" data-max><svg class="ic"><use href="#i-send"/></svg></button><button class="icon-btn" title="PDF" data-row-pdf><svg class="ic"><use href="#i-pdf"/></svg></button><button class="icon-btn" title="Копировать ссылку" data-row-copy><svg class="ic"><use href="#i-copy"/></svg></button><button class="icon-btn" title="Создать на основе" data-row-dup><svg class="ic"><use href="#i-more"/></svg></button></div></td></tr>
           </tbody>
         </table>
-        <div class="foot"><span>Показано 5 из 1 284</span><div class="pager"><a class="on" href="#">1</a><a href="#">2</a><a href="#">3</a><a href="#">…</a><a href="#">257</a></div></div>
+        <div class="foot"><span id="shown">Показано 5 из 1 284</span><div class="pager" id="pager"><a class="on" href="#">1</a><a href="#">2</a><a href="#">3</a><a href="#">…</a><a href="#">257</a></div></div>
       </div>
     </div>
   </main>
@@ -451,13 +474,13 @@ tbody tr:hover .row-act{opacity:1}
     <img src="{{LOGO}}" alt="Купибас">
     <h1><svg class="spark"><use href="#spark"/></svg>С возвращением</h1>
     <p>Кабинет менеджера Купибас</p>
-    <form class="auth-card" name="form_auth" method="post" action="/manager/?login=yes" onsubmit="return false">
+    <form class="auth-card" name="form_auth" method="post" action="/manager/?login=yes" id="auth-form">
       <input type="hidden" name="AUTH_FORM" value="Y"><input type="hidden" name="TYPE" value="AUTH">
       <div class="fld"><label>Логин</label><input type="text" name="USER_LOGIN" autocomplete="username"></div>
       <div class="fld"><label>Пароль</label><input type="password" name="USER_PASSWORD" autocomplete="current-password"></div>
       <label class="chk"><input type="checkbox" name="USER_REMEMBER" value="Y">Запомнить меня на этом компьютере</label>
       <button class="btn-pri" type="submit">Войти</button>
-      <a class="forgot" href="/manager/?forgot_password=yes">Забыли пароль?</a>
+      <a class="forgot" href="#" data-toast="Ссылка для восстановления пароля отправлена на почту">Забыли пароль?</a>
     </form>
   </div>
 </div>
@@ -514,13 +537,18 @@ tbody tr:hover .row-act{opacity:1}
   <div class="pal">
     <input placeholder="Номер КП, клиент, товар или команда…">
     <div class="g"><div class="gt">Перейти</div>
-      <a href="/manager/"><svg class="ic"><use href="#i-home"/></svg>Рабочий стол<span>G H</span></a>
-      <a href="/manager/table/"><svg class="ic"><use href="#i-plus"/></svg>Новое предложение<span>N</span></a>
-      <a href="/manager/table/?action=open"><svg class="ic"><use href="#i-list"/></svg>Все предложения<span>G P</span></a>
+      <a href="manager-claude.html"><svg class="ic"><use href="#i-home"/></svg>Рабочий стол<span>G H</span></a>
+      <a href="offer.html"><svg class="ic"><use href="#i-plus"/></svg>Новое предложение<span>N</span></a>
+      <a href="#offers" data-scroll-offers><svg class="ic"><use href="#i-list"/></svg>Все предложения<span>G P</span></a>
+      <a href="spravochnik.html"><svg class="ic"><use href="#i-book"/></svg>Справочник работ<span>G S</span></a>
+      <a href="spravochnik.html#catalog"><svg class="ic"><use href="#i-box"/></svg>Каталог и цены 1С<span></span></a>
     </div>
     <div class="g"><div class="gt">Недавние</div>
-      <a href="#"><svg class="ic"><use href="#i-pdf"/></svg>2419 · Сергей Волков<span>1 284 500 ₽</span></a>
-      <a href="#"><svg class="ic"><use href="#i-pdf"/></svg>2417 · Ирина Белова<span>2 975 000 ₽</span></a>
+      <a href="#" data-kp-open="2419"><svg class="ic"><use href="#i-pdf"/></svg>2419 · Сергей Волков<span>1 284 500 ₽</span></a>
+      <a href="#" data-kp-open="2418"><svg class="ic"><use href="#i-pdf"/></svg>2418 · ООО «Аквадом»<span>612 040 ₽</span></a>
+      <a href="#" data-kp-open="2417"><svg class="ic"><use href="#i-pdf"/></svg>2417 · Ирина Белова<span>2 975 000 ₽</span></a>
+      <a href="#" data-kp-open="2416"><svg class="ic"><use href="#i-pdf"/></svg>2416 · Коттедж «Сосны»<span>348 900 ₽</span></a>
+      <a href="#" data-kp-open="2415"><svg class="ic"><use href="#i-pdf"/></svg>2415 · Павел Орлов<span>96 300 ₽</span></a>
     </div>
     <div class="g"><div class="gt">Действия</div>
       <a href="#" data-theme-toggle><svg class="ic"><use href="#i-moon"/></svg>Сменить тему<span>⇧D</span></a>
@@ -589,6 +617,60 @@ tbody tr:hover .row-act{opacity:1}
     if(t=e.target.closest('tbody tr[data-kp]')){if(!e.target.closest('.row-act'))openDrawer(rowData(t));}
   });
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closeAll()});
+})();
+</script>
+<script>
+(function(){
+  var $=function(s,r){return (r||document).querySelector(s)},$$=function(s,r){return [].slice.call((r||document).querySelectorAll(s))};
+  function toast(t){var el=document.getElementById('toast');el.querySelector('span').textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('show')},2600)}
+  function token(no){var c='abcdefghjkmnpqrstuvwxyz23456789',t='';for(var i=0;i<6;i++)t+=c[(no*7+i*13)%c.length];return t}
+  var CLIENTS={'2419':'Сергей Волков','2418':'ООО «Аквадом»','2417':'Ирина Белова','2416':'Коттедж «Сосны»','2415':'Павел Орлов','2412':'Гостиница «Лесная»','2409':'Кравец'};
+  function openKp(no){var tr=$('tr[data-kp="'+no+'"]');if(tr){tr.click();return}var b=$('[data-open-kp]');b.click();$('#d-no').textContent='КП № '+no;$('#d-cl').textContent=CLIENTS[no]||''}
+  /* фильтр таблицы */
+  function applyFilter(f){var n=0;$$('tbody tr[data-kp]').forEach(function(tr){var mgr=tr.querySelector('.mgr').textContent.indexOf('Анна')>-1,st=tr.querySelector('.st'),wait=st.classList.contains('wait')||st.classList.contains('seen');
+    var show=f==='all'||(f==='my'&&mgr)||(f==='wait'&&wait);tr.classList.toggle('hide',!show);if(show)n++});
+    $('#shown').textContent=f==='all'?'Показано 5 из 1 284':'Показано '+n+' · фильтр «'+{my:'Мои',wait:'Ждут ответа'}[f]+'»'}
+  /* задачи */
+  function taskCnt(){var all=$$('.task input'),done=all.filter(function(i){return i.checked}).length;$('#task-cnt').textContent=done+' из '+all.length}
+  /* свёрнутая панель */
+  try{if(localStorage.getItem('kb-side-mini')==='1')$('#s-dash').classList.add('mini')}catch(e){}
+  var TPLW=[[/фарол|farol/i,'farol'],[/франмер|franmer/i,'franmer'],[/маршал|marshal/i,'marshal'],[/3d|3д/i,'film-3d'],[/плён|плен/i,'film-budget'],[/перелив/i,'tile-ovf'],[/керамогранит|плитк/i,'tile-skim'],[/био/i,'bio']];
+  function submitQ(){var ta=$('.composer textarea'),q=ta.value.trim();if(!q){ta.focus();toast('Введите номер КП, клиента или опишите новое предложение');return}
+    var no=(q.match(/\b(24\d\d)\b/)||[])[1];if(no&&CLIENTS[no]){openKp(no);ta.value='';return}
+    for(var i=0;i<TPLW.length;i++)if(TPLW[i][0].test(q)){location.href='offer.html?tpl='+TPLW[i][1];return}
+    var hit=Object.keys(CLIENTS).filter(function(k){return CLIENTS[k].toLowerCase().indexOf(q.toLowerCase())>-1})[0];if(hit){openKp(hit);ta.value='';return}
+    if(/кп|предлож|бассейн|нов/i.test(q)){location.href='offer.html';return}
+    var pal=$('#pal');$('[data-pal]').click();setTimeout(function(){var i=pal.querySelector('input');i.value=q;i.dispatchEvent(new Event('input'))},20)}
+  document.addEventListener('click',function(e){
+    var t,el=e.target;
+    if(t=el.closest('[data-go]')){location.href=t.dataset.go;return}
+    if(t=el.closest('[data-go-new]')){window.open(t.dataset.goNew,'_blank');return}
+    if(t=el.closest('[data-toast]')){e.preventDefault();toast(t.dataset.toast);return}
+    if(t=el.closest('[data-kp-open]')){e.preventDefault();$('#pal').classList.remove('open');openKp(t.dataset.kpOpen);return}
+    if(el.closest('[data-scroll-offers]')){e.preventDefault();$('#pal').classList.remove('open');$('#offers').scrollIntoView({behavior:'smooth'});return}
+    if(t=el.closest('#flt button')){applyFilter(t.dataset.f);return}
+    if(t=el.closest('[data-later]')){var tip=t.closest('.tip');tip.classList.add('gone');toast('Подсказка скрыта до завтра');if(!$$('.tip:not(.gone)').length)$('.card.ai').insertAdjacentHTML('beforeend','<p style="color:var(--text-3);margin:10px 0 0">На сегодня всё — новых подсказок нет.</p>');return}
+    if(el.closest('[data-recalc]')){toast('Пересчитано по курсу 93,58 ₽/€: КП № 2418 и № 2412');return}
+    if(el.closest('[data-show-eur]')){applyFilter('all');$('#offers').scrollIntoView({behavior:'smooth'});toast('КП в евро: № 2418, № 2412');return}
+    if(el.closest('[data-file]')){$('#file-in').click();return}
+    if(t=el.closest('[data-cur]')){var sp=t.querySelector('span');sp.textContent=sp.textContent==='EUR'?'RUB':'EUR';toast('Валюта нового КП: '+sp.textContent);return}
+    if(el.closest('[data-send-q]')){submitQ();return}
+    if(t=el.closest('[data-row-pdf]')){e.stopPropagation();window.open('kp.html','_blank');return}
+    if(t=el.closest('[data-row-copy]')){e.stopPropagation();var no=t.closest('tr').dataset.kp;try{navigator.clipboard.writeText('https://kupibas.ru/kp/'+token(+no))}catch(x){}toast('Ссылка на КП № '+no+' скопирована');return}
+    if(t=el.closest('[data-row-dup]')){e.stopPropagation();location.href='offer.html';return}
+    if(t=el.closest('#pager a')){e.preventDefault();if(t.textContent==='…')return;$$('#pager a').forEach(function(a){a.classList.toggle('on',a===t)});toast('Прототип: показана страница '+t.textContent);return}
+    if(el.closest('[data-collapse]')){var a=$('#s-dash');a.classList.toggle('mini');try{localStorage.setItem('kb-side-mini',a.classList.contains('mini')?'1':'0')}catch(x){}return}
+  },true);
+  document.addEventListener('change',function(e){if(e.target.closest('.task'))taskCnt();if(e.target.id==='file-in'&&e.target.files[0]){toast('Смета «'+e.target.files[0].name+'» загружена — откроем в конструкторе');setTimeout(function(){location.href='offer.html'},900)}});
+  $('.composer textarea').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitQ()}});
+  $('#auth-form').addEventListener('submit',function(e){e.preventDefault();var l=this.querySelector('[name=USER_LOGIN]'),p=this.querySelector('[name=USER_PASSWORD]');if(!l.value||!p.value){toast('Введите логин и пароль');(l.value?p:l).focus();return}$('.proto button[data-s="s-dash"]').click();toast('Вход выполнен (прототип)')});
+  /* палитра: стрелки и Enter */
+  var pal=$('#pal');pal.querySelector('input').addEventListener('keydown',function(e){var items=$$('.g a',pal).filter(function(a){return a.style.display!=='none'}),cur=items.findIndex(function(a){return a.classList.contains('on')});
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!items.length)return;var n=(cur+(e.key==='ArrowDown'?1:-1)+items.length)%items.length;items.forEach(function(a,i){a.classList.toggle('on',i===n)})}
+    else if(e.key==='Enter'){e.preventDefault();(items[cur]||items[0])&&(items[cur]||items[0]).click()}});
+  pal.querySelector('input').addEventListener('input',function(){$$('.g a',pal).forEach(function(a){a.classList.remove('on')})});
+  taskCnt();
+  if(location.hash==='#offers')setTimeout(function(){$('#offers').scrollIntoView()},50);
 })();
 </script>
 </body>
