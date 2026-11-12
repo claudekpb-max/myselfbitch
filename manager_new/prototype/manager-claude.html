@@ -8,6 +8,8 @@
 (function(){var t=null;try{t=localStorage.getItem('kb-theme-v2')}catch(e){}
 document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'light');})();
 </script>
+<link rel="stylesheet" href="vendor/gridstack/gridstack.min.css">
+<script src="vendor/gridstack/gridstack-all.js"></script>
 <style>
 :root{
   --bg:#faf9f5; --side:#f5f4ed; --surface:#ffffff; --surface-2:#f0eee6; --hover:#ebe9df;
@@ -238,11 +240,62 @@ tbody tr:hover .row-act{opacity:1}
 .tip.gone{display:none}
 tbody tr.hide{display:none}
 .tbl-tools .btn{display:inline-flex;align-items:center}
+/* ---------- Конструктор рабочего стола ---------- */
+.dash-bar{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:6px 0 10px}
+.dash-ttl{font:400 26px/1.2 var(--serif);margin:0;display:inline-block;margin-right:12px}
+.dash-rep{color:var(--text-2);font-size:13.5px} .dash-rep:hover{color:var(--accent)}
+.dash-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dash-tools .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 13px;font-size:13.5px}
+.btn.dark{background:var(--text);border-color:var(--text);color:var(--bg)}
+.dash-hint,.dash-tools [data-lib],.dash-tools [data-dash-reset]{display:none}
+.editing-on .dash-hint{display:inline;color:var(--text-3);font-size:12.5px}
+.editing-on .dash-tools [data-lib],.editing-on .dash-tools [data-dash-reset]{display:inline-flex}
+.btn.dark.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.grid-stack{margin:0 -7px}
+.grid-stack-item-content{overflow:hidden!important;border-radius:16px}
+.w-body{height:100%;overflow:auto;scrollbar-width:thin}
+.w-body>.kpi,.w-body>.card{height:100%;box-sizing:border-box}
+.w-body>.card.tbl{height:auto}
+.w-body .hero{padding:14px 0 4px}
+.grid-stack-item-content{position:relative}
+.w-handle{display:none;position:absolute;z-index:3;left:6px;right:6px;top:6px;align-items:center;gap:8px;height:32px;padding:0 4px 0 10px;border-radius:10px;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(6px);border:1px solid var(--line-2);box-shadow:var(--shadow);cursor:grab;font-size:12.5px;color:var(--text-2);user-select:none}
+.w-handle:active{cursor:grabbing}
+.w-handle .grip{color:var(--text-3);font-size:14px}
+.w-handle b{font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.w-handle .icon-btn{width:26px;height:26px}
+#dash.editing .w-handle{display:flex}
+#dash.editing .w-body{pointer-events:none;opacity:.55;outline:2px dashed var(--line-2);outline-offset:-2px;border-radius:16px}
+#dash.editing{background-image:radial-gradient(var(--line-2) 1px,transparent 1px);background-size:24px 24px;border-radius:16px}
+.grid-stack-placeholder>.placeholder-content{background:var(--accent-soft)!important;border:2px dashed var(--accent);border-radius:16px}
+.grid-stack>.grid-stack-item>.ui-resizable-se{background:none;width:18px;height:18px;right:9px;bottom:9px;border-right:3px solid var(--accent);border-bottom:3px solid var(--accent);border-radius:0 0 6px 0;transform:none}
+/* библиотека блоков — выезжает справа */
+.lib{position:fixed;z-index:62;top:0;right:0;height:100vh;width:360px;max-width:100vw;background:var(--surface);border-left:1px solid var(--line);box-shadow:var(--shadow-lg);transform:translateX(105%);transition:transform .3s cubic-bezier(.2,.9,.3,1);display:flex;flex-direction:column}
+.lib.open{transform:none}
+.lib .lh{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)} .lib .lh b{font:400 20px var(--serif)} .lib .lh .x{margin-left:auto}
+.lib .lb{padding:12px 14px;overflow:auto;flex:1} .lib p{color:var(--text-3);font-size:13px;margin:0 4px 10px}
+.lib label{display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer}
+.lib label:hover{background:var(--surface-2)}
+.lib label span{flex:1} .lib label small{color:var(--text-3);font-size:12px}
+.lib input{appearance:none;width:38px;height:22px;border-radius:999px;background:var(--line-2);position:relative;cursor:pointer;transition:background .2s;flex:none;margin:0}
+.lib input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+.lib input:checked{background:var(--accent)} .lib input:checked::after{transform:translateX(16px)}
+.lib .lf{padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:8px}
+/* левая панель выезжает */
+.menu-btn{display:none}
+.app.side-off .menu-btn{display:grid}
+.side{transition:transform .3s cubic-bezier(.2,.9,.3,1)}
+.app.side-off{grid-template-columns:0 1fr}
+.app.side-off .side{transform:translateX(-100%);overflow:hidden;padding:0;border:0}
+.side-ovl{display:none}
 .screen{display:none} .screen.on{display:block}
 .app.screen.on{display:grid}
 
 @media (max-width:1000px){
   .app{grid-template-columns:1fr} .side{display:none}
+  .menu-btn{display:grid}
+  .app .side.m-open{display:flex;position:fixed;z-index:70;left:0;top:0;width:280px;transform:none;padding:14px 12px;box-shadow:var(--shadow-lg)}
+  .side-ovl.open{display:block;position:fixed;inset:0;z-index:69;background:rgba(20,20,19,.35)}
+  .dash-hint{display:none!important}
   .kpis{grid-template-columns:repeat(2,1fr)} .grid2{grid-template-columns:1fr}
   .search-btn{min-width:0} .search-btn span{display:none}
   .hero h1{font-size:30px}
@@ -388,6 +441,7 @@ tbody tr.hide{display:none}
 
   <main class="main">
     <div class="top">
+      <button class="icon-btn menu-btn" data-menu title="Меню"><svg class="ic"><use href="#i-panel"/></svg></button>
       <div class="crumbs"><b>Рабочий стол</b></div>
       <div class="sp"></div>
       <button class="search-btn" data-pal><svg class="ic" style="width:16px;height:16px"><use href="#i-search"/></svg><span>Поиск по предложениям</span><kbd>⌘K</kbd></button>
@@ -395,6 +449,19 @@ tbody tr.hide{display:none}
     </div>
 
     <div class="wrap">
+      <div class="dash-bar">
+        <div><h2 class="dash-ttl">Ноябрь</h2><a href="#" class="dash-rep" data-toast="Отчёт за ноябрь формируется — придёт на почту">Отчёт за месяц →</a></div>
+        <div class="dash-tools">
+          <span class="dash-hint">Тяните блоки за шапку, меняйте размер за правый нижний угол</span>
+          <button class="btn" data-lib><svg class="ic" style="width:16px;height:16px"><use href="#i-plus"/></svg>Блоки</button>
+          <button class="btn" data-dash-reset title="Вернуть исходную раскладку">Сбросить</button>
+          <button class="btn dark" data-dash-edit><svg class="ic" style="width:16px;height:16px"><use href="#i-panel"/></svg><span>Настроить</span></button>
+        </div>
+      </div>
+      <div class="grid-stack" id="dash">
+      <div class="grid-stack-item" gs-id="greet" gs-x="0" gs-y="0" gs-w="12" gs-h="5" data-title="Приветствие и быстрый поиск"><div class="grid-stack-item-content plain">
+        <div class="w-handle"><span class="grip">⠿</span><b>Приветствие и быстрый поиск</b><button class="icon-btn w-hide" data-w-hide title="Скрыть блок"><svg class="ic"><use href="#i-x"/></svg></button></div>
+        <div class="w-body">
       <section class="hero">
         <h1><svg class="spark"><use href="#spark"/></svg><span id="greet">Добрый вечер, Анна</span></h1>
         <p>Три предложения ждут ответа клиента. Курс евро вырос — два КП стоит пересчитать.</p>
@@ -415,17 +482,37 @@ tbody tr.hide{display:none}
         <button data-go-new="kp.html"><svg class="ic"><use href="#i-pdf"/></svg>Выгрузить в PDF</button>
       </div>
 
-      <div class="sec-hd"><h2>Ноябрь</h2><a href="#" data-toast="Отчёт за ноябрь формируется — придёт на почту">Отчёт за месяц →</a></div>
-      <div class="kpis">
+        </div>
+      </div></div>
+      <div class="grid-stack-item" gs-id="kpi-offers" gs-x="0" gs-y="5" gs-w="3" gs-h="2" data-title="Предложений за месяц"><div class="grid-stack-item-content plain">
+        <div class="w-handle"><span class="grip">⠿</span><b>Предложений за месяц</b><button class="icon-btn w-hide" data-w-hide title="Скрыть блок"><svg class="ic"><use href="#i-x"/></svg></button></div>
+        <div class="w-body">
         <div class="kpi"><small>Предложений</small><div class="v">48</div><div class="d">+12% к октябрю</div>
           <svg class="sl" width="84" height="30" viewBox="0 0 84 30"><path class="a" d="M0 24 14 20 28 22 42 13 56 15 70 7 84 5V30H0Z"/><path class="l" d="M0 24 14 20 28 22 42 13 56 15 70 7 84 5"/></svg></div>
+        </div>
+      </div></div>
+      <div class="grid-stack-item" gs-id="kpi-sum" gs-x="3" gs-y="5" gs-w="3" gs-h="2" data-title="Сумма в работе"><div class="grid-stack-item-content plain">
+        <div class="w-handle"><span class="grip">⠿</span><b>Сумма в работе</b><button class="icon-btn w-hide" data-w-hide title="Скрыть блок"><svg class="ic"><use href="#i-x"/></svg></button></div>
+        <div class="w-body">
         <div class="kpi"><small>Сумма в работе</small><div class="v">14,2 млн</div><div class="d">+1,8 млн за неделю</div>
           <svg class="sl" width="84" height="30" viewBox="0 0 84 30"><path class="a" d="M0 18 14 22 28 16 42 18 56 10 70 12 84 7V30H0Z"/><path class="l" d="M0 18 14 22 28 16 42 18 56 10 70 12 84 7"/></svg></div>
+        </div>
+      </div></div>
+      <div class="grid-stack-item" gs-id="kpi-conv" gs-x="6" gs-y="5" gs-w="3" gs-h="2" data-title="Конверсия"><div class="grid-stack-item-content plain">
+        <div class="w-handle"><span class="grip">⠿</span><b>Конверсия</b><button class="icon-btn w-hide" data-w-hide title="Скрыть блок"><svg class="ic"><use href="#i-x"/></svg></button></div>
+        <div class="w-body">
         <div class="kpi"><small>Конверсия в заказ</small><div class="v">31%</div><div class="d neg">−2 п.п.</div></div>
+        </div>
+      </div></div>
+      <div class="grid-stack-item" gs-id="kpi-plan" gs-x="9" gs-y="5" gs-w="3" gs-h="2" data-title="План месяца"><div class="grid-stack-item-content plain">
+        <div class="w-handle"><span class="grip">⠿</span><b>План месяца</b><button class="icon-btn w-hide" data-w-hide title="Скрыть блок"><svg class="ic"><use href="#i-x"/></svg></button></div>
+        <div class="w-body">
         <div class="kpi"><small>План месяца</small><div class="v">68%</div><div class="bar"><i></i></div></div>
-      </div>
-
-      <div class="grid2">
+        </div>
+      </div></div>
+      <div class="grid-stack-item" gs-id="ai" gs-x="0" gs-y="7" gs-w="8" gs-h="5" data-title="Что важно сегодня"><div class="grid-stack-item-content plain">
+        <div class="w-handle"><span class="grip">⠿</span><b>Что важно сегодня</b><button class="icon-btn w-hide" data-w-hide title="Скрыть блок"><svg class="ic"><use href="#i-x"/></svg></button></div>
+        <div class="w-body">
         <div class="card ai">
           <div class="hd"><svg class="spark"><use href="#spark"/></svg><b>Что важно сегодня</b><span>обновлено 18:30</span></div>
           <div class="tip"><div class="dot"><svg class="ic"><use href="#i-phone"/></svg></div><div>
@@ -438,6 +525,11 @@ tbody tr.hide{display:none}
             <p><b>Franmer 8×4</b> заканчивается у поставщика — осталось 2 шт.</p>
             <div class="act"><button data-go="spravochnik.html#catalog">Подробнее</button><button data-later>Скрыть</button></div></div></div>
         </div>
+        </div>
+      </div></div>
+      <div class="grid-stack-item" gs-id="tasks" gs-x="8" gs-y="7" gs-w="4" gs-h="5" data-title="Задачи"><div class="grid-stack-item-content plain">
+        <div class="w-handle"><span class="grip">⠿</span><b>Задачи</b><button class="icon-btn w-hide" data-w-hide title="Скрыть блок"><svg class="ic"><use href="#i-x"/></svg></button></div>
+        <div class="w-body">
         <div class="card tasks">
           <div class="hd">Задачи <small id="task-cnt">2 из 5</small></div>
           <label class="task"><input type="checkbox"><div>Перезвонить Беловой по КП 2417<small>сегодня, 19:00</small></div></label>
@@ -446,8 +538,11 @@ tbody tr.hide{display:none}
           <label class="task"><input type="checkbox"><div>Замер в коттедже «Сосны»<small>пт, 12:00</small></div></label>
           <label class="task"><input type="checkbox" checked><div>Подготовить КП для гостиницы<small>выполнено</small></div></label>
         </div>
-      </div>
-
+        </div>
+      </div></div>
+      <div class="grid-stack-item" gs-id="offers" gs-x="0" gs-y="12" gs-w="12" gs-h="7" data-title="Последние предложения"><div class="grid-stack-item-content plain">
+        <div class="w-handle"><span class="grip">⠿</span><b>Последние предложения</b><button class="icon-btn w-hide" data-w-hide title="Скрыть блок"><svg class="ic"><use href="#i-x"/></svg></button></div>
+        <div class="w-body">
       <div class="sec-hd" id="offers"><h2>Последние предложения</h2>
         <div class="tbl-tools"><div class="seg" id="flt"><button class="on" data-f="all">Все</button><button data-f="my">Мои</button><button data-f="wait">Ждут ответа</button></div><a class="btn" href="offer.html" style="padding:6px 12px;font-size:13px">+ Новое</a></div></div>
       <div class="card tbl">
@@ -462,6 +557,9 @@ tbody tr.hide{display:none}
           </tbody>
         </table>
         <div class="foot"><span id="shown">Показано 5 из 1 284</span><div class="pager" id="pager"><a class="on" href="#">1</a><a href="#">2</a><a href="#">3</a><a href="#">…</a><a href="#">257</a></div></div>
+      </div>
+        </div>
+      </div></div>
       </div>
     </div>
   </main>
@@ -530,6 +628,12 @@ tbody tr.hide{display:none}
   </div>
   <div class="df"><button class="btn max" data-max-from-drawer><svg class="ic" style="width:16px;height:16px"><use href="#i-send"/></svg>Отправить снова</button><a class="btn" href="kp.html" target="_blank">Как видит клиент</a></div>
 </aside>
+<aside class="lib" id="lib" aria-label="Блоки рабочего стола">
+  <div class="lh"><b>Блоки рабочего стола</b><button class="icon-btn x" data-lib-close><svg class="ic"><use href="#i-x"/></svg></button></div>
+  <div class="lb"><p>Включите нужные блоки — они появятся на столе. Перетаскивайте их за шапку и меняйте размер за правый нижний угол.</p><div id="lib-list"></div></div>
+  <div class="lf"><button class="btn" data-dash-reset style="flex:1">Сбросить раскладку</button><button class="btn dark" data-lib-close style="flex:1">Готово</button></div>
+</aside>
+<div class="side-ovl" id="side-ovl"></div>
 <div class="toast" id="toast"><svg class="ic" style="width:16px;height:16px"><use href="#i-check"/></svg><span></span></div>
 
 <!-- ⌘K -->
@@ -631,9 +735,10 @@ tbody tr.hide{display:none}
     var show=f==='all'||(f==='my'&&mgr)||(f==='wait'&&wait);tr.classList.toggle('hide',!show);if(show)n++});
     $('#shown').textContent=f==='all'?'Показано 5 из 1 284':'Показано '+n+' · фильтр «'+{my:'Мои',wait:'Ждут ответа'}[f]+'»'}
   /* задачи */
+  function closeSide(){$('.side').classList.remove('m-open');$('#side-ovl').classList.remove('open')}
   function taskCnt(){var all=$$('.task input'),done=all.filter(function(i){return i.checked}).length;$('#task-cnt').textContent=done+' из '+all.length}
   /* свёрнутая панель */
-  try{if(localStorage.getItem('kb-side-mini')==='1')$('#s-dash').classList.add('mini')}catch(e){}
+  try{if(localStorage.getItem('kb-side-off')==='1')$('#s-dash').classList.add('side-off')}catch(e){}
   var TPLW=[[/фарол|farol/i,'farol'],[/франмер|franmer/i,'franmer'],[/маршал|marshal/i,'marshal'],[/3d|3д/i,'film-3d'],[/плён|плен/i,'film-budget'],[/перелив/i,'tile-ovf'],[/керамогранит|плитк/i,'tile-skim'],[/био/i,'bio']];
   function submitQ(){var ta=$('.composer textarea'),q=ta.value.trim();if(!q){ta.focus();toast('Введите номер КП, клиента или опишите новое предложение');return}
     var no=(q.match(/\b(24\d\d)\b/)||[])[1];if(no&&CLIENTS[no]){openKp(no);ta.value='';return}
@@ -659,7 +764,9 @@ tbody tr.hide{display:none}
     if(t=el.closest('[data-row-copy]')){e.stopPropagation();var no=t.closest('tr').dataset.kp;try{navigator.clipboard.writeText('https://kupibas.ru/kp/'+token(+no))}catch(x){}toast('Ссылка на КП № '+no+' скопирована');return}
     if(t=el.closest('[data-row-dup]')){e.stopPropagation();location.href='offer.html';return}
     if(t=el.closest('#pager a')){e.preventDefault();if(t.textContent==='…')return;$$('#pager a').forEach(function(a){a.classList.toggle('on',a===t)});toast('Прототип: показана страница '+t.textContent);return}
-    if(el.closest('[data-collapse]')){var a=$('#s-dash');a.classList.toggle('mini');try{localStorage.setItem('kb-side-mini',a.classList.contains('mini')?'1':'0')}catch(x){}return}
+    if(el.closest('[data-collapse]')){var a=$('#s-dash');if(innerWidth<=1000){closeSide();return}a.classList.add('side-off');try{localStorage.setItem('kb-side-off','1')}catch(x){}return}
+    if(el.closest('[data-menu]')){if(innerWidth<=1000){$('.side').classList.add('m-open');$('#side-ovl').classList.add('open');return}$('#s-dash').classList.remove('side-off');try{localStorage.setItem('kb-side-off','0')}catch(x){}return}
+    if(el.closest('#side-ovl')||(innerWidth<=1000&&el.closest('.side a'))){closeSide()}
   },true);
   document.addEventListener('change',function(e){if(e.target.closest('.task'))taskCnt();if(e.target.id==='file-in'&&e.target.files[0]){toast('Смета «'+e.target.files[0].name+'» загружена — откроем в конструкторе');setTimeout(function(){location.href='offer.html'},900)}});
   $('.composer textarea').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitQ()}});
@@ -671,6 +778,39 @@ tbody tr.hide{display:none}
   pal.querySelector('input').addEventListener('input',function(){$$('.g a',pal).forEach(function(a){a.classList.remove('on')})});
   taskCnt();
   if(location.hash==='#offers')setTimeout(function(){$('#offers').scrollIntoView()},50);
+})();
+</script>
+<script>
+/* ===== Конструктор рабочего стола: GridStack ===== */
+(function(){
+  var $=function(s,r){return (r||document).querySelector(s)},$$=function(s,r){return [].slice.call((r||document).querySelectorAll(s))};
+  var KEY='kb-dash-v1',dashEl=$('#dash');if(!dashEl||!window.GridStack)return;
+  function toast(t){var el=$('#toast');el.querySelector('span').textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('show')},2600)}
+  var items={};$$('.grid-stack-item',dashEl).forEach(function(el){items[el.getAttribute('gs-id')]={el:el,title:el.dataset.title}});
+  var grid=GridStack.init({column:12,cellHeight:76,margin:7,staticGrid:true,handle:'.w-handle',animate:true,float:false,
+    columnOpts:{breakpoints:[{w:700,c:1},{w:1000,c:6}],layout:'moveScale'}},dashEl);
+  var DEFAULT=grid.save(false).map(function(n){return {id:n.id,x:n.x,y:n.y,w:n.w,h:n.h}});
+  var hidden={};
+  function state(){try{return JSON.parse(localStorage.getItem(KEY))||null}catch(e){return null}}
+  function persist(){var prev=state()||{},layout=grid.getColumn()===12?grid.save(false).map(function(n){return {id:n.id,x:n.x,y:n.y,w:n.w,h:n.h}}):prev.layout;try{localStorage.setItem(KEY,JSON.stringify({layout:layout,hidden:Object.keys(hidden)}))}catch(e){}}
+  function hide(id,quiet){var it=items[id];if(!it||hidden[id])return;grid.removeWidget(it.el,false);it.el.remove();hidden[id]=1;renderLib();if(!quiet){persist();toast('Блок «'+it.title+'» скрыт — вернуть можно в «Блоки»')}}
+  function show(id,quiet){var it=items[id];if(!it||!hidden[id])return;delete hidden[id];var d=DEFAULT.filter(function(n){return n.id===id})[0]||{w:4,h:3};
+    it.el.setAttribute('gs-id',id);dashEl.appendChild(it.el);grid.makeWidget(it.el,{id:id,w:d.w,h:d.h,autoPosition:true});renderLib();if(!quiet){persist();toast('Блок «'+it.title+'» добавлен');it.el.scrollIntoView({behavior:'smooth',block:'center'})}}
+  function renderLib(){$('#lib-list').innerHTML=Object.keys(items).map(function(id){return '<label><input type="checkbox" data-w-toggle="'+id+'"'+(hidden[id]?'':' checked')+'><span>'+items[id].title+'</span></label>'}).join('')}
+  function apply(st){if(!st)return;(st.hidden||[]).forEach(function(id){hide(id,true)});if(st.layout){grid.batchUpdate();st.layout.forEach(function(n){var it=items[n.id];if(it&&!hidden[n.id])grid.update(it.el,{x:n.x,y:n.y,w:n.w,h:n.h})});grid.batchUpdate(false)}}
+  function setEdit(on){grid.setStatic(!on);dashEl.classList.toggle('editing',on);document.body.classList.toggle('editing-on',on);var b=$('[data-dash-edit]');b.querySelector('span').textContent=on?'Готово':'Настроить';b.classList.toggle('pri',on)}
+  apply(state());renderLib();
+  grid.on('change',persist);grid.on('added removed',function(){});
+  document.addEventListener('click',function(e){var t,el=e.target;
+    if(el.closest('[data-dash-edit]')){var on=!dashEl.classList.contains('editing');setEdit(on);if(!on){persist();toast('Раскладка сохранена')}return}
+    if(t=el.closest('[data-w-hide]')){hide(t.closest('.grid-stack-item').getAttribute('gs-id'));return}
+    if(el.closest('[data-lib]')){$('#lib').classList.add('open');return}
+    if(el.closest('[data-lib-close]')){$('#lib').classList.remove('open');return}
+    if(el.closest('[data-dash-reset]')){Object.keys(hidden).forEach(function(id){show(id,true)});grid.load(DEFAULT);try{localStorage.removeItem(KEY)}catch(x){}renderLib();toast('Раскладка сброшена к исходной');return}
+  });
+  document.addEventListener('change',function(e){var id=e.target.dataset&&e.target.dataset.wToggle;if(id){e.target.checked?show(id):hide(id)}});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){$('#lib').classList.remove('open');if(dashEl.classList.contains('editing')){setEdit(false);persist()}}});
+  window.KBDash={grid:grid,hide:hide,show:show,setEdit:setEdit};
 })();
 </script>
 </body>

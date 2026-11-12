@@ -6,11 +6,19 @@
 - Все новые файлы, копии и правки складываем внутрь «код», каждый проект — в своей подпапке.
 - Оригиналы вне «код» не изменяем: сначала копируем в «код», потом правим копию.
 
+## manager_new — работаем только в GitHub
+- Все изменения manager_new ведём **только в GitHub** (репозиторий claudekpb-max/myselfbitch, папка `manager_new/`), **никогда не трогая рабочую версию на сайте** kupibas.ru/manager/.
+- Ссылки для тестирования (обновляются после каждого push в ветку `claude/elegant-feynman-bslnv4`, кэш до нескольких минут):
+  https://raw.githack.com/claudekpb-max/myselfbitch/claude/elegant-feynman-bslnv4/manager_new/index.html
+- Папка «код» на Google Диске — архивная копия; правки туда больше не дублируем, если владелец не попросит.
+
 ## Проекты в «код»
 - `manager_new/` — рабочая копия редизайна kupibas.ru/manager/ «2027»
   (оригинал: папка «менеджер» на Диске, бэкап шаблона — там же в `backup/original/`).
   - `prototype/` — manager-claude.html (главная, собирается build.py из claude-style.src.html), offer.html (конструктор КП, 8 шаблонов), spravochnik.html (работы/расценки, каталог и цены 1С), kp.html (КП клиента), index.html + manager-2027.css/js (слой для Битрикса), kb-data.js / kb-ui.css (общие данные и стили)
   - `для-теста/` — самодостаточная копия для скачивания и открытия с диска (СТАРТ.html); на Google Диске: код/manager_new/для-теста
+  - `tools/make-test-copy.sh` — пересобирает `для-теста/` из `prototype/`
+  - `prototype/vendor/gridstack/` — GridStack 10.3.1 (MIT), перетаскивание и размер блоков рабочего стола
   - `tests/smoke.js` — Playwright-проверка всех страниц: из manager_new `python3 -m http.server 8765`, затем `node tests/smoke.js`
   - `tools/bx.py` — запуск PHP через админку Битрикса (логин/пароль только из env `BX_USER`/`BX_PASS`, никогда не в коде и не в чате)
 - `собственный-пляж/` — под копию лендинга собственный-пляж.рф (Битрикс, kupibas). Пока пусто: ждём архив резервной копии из админки.

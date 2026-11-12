@@ -457,6 +457,91 @@ async function testSprav(ctx, label) {
   await page.close();
 }
 
+async function testDash(ctx, label, mobile) {
+  const p = await openPage(ctx, 'manager-claude.html');
+  const { page } = p;
+  await page.evaluate(() => { localStorage.removeItem('kb-dash-v1'); localStorage.removeItem('kb-side-off'); }); await page.reload(); await page.waitForTimeout(300);
+  await check(page, label, 'конструктор: 8 блоков, без ошибок', async () => {
+    assert(p.errors.length === 0, p.errors.join(' | '));
+    const n = await page.$$eval('#dash .grid-stack-item', x => x.length); assert(n === 8, `блоков ${n}`);
+  });
+  await check(page, label, 'без режима настройки блоки не двигаются', async () => {
+    assert(!(await page.locator('.w-handle').first().isVisible()), 'шапка блока видна вне режима настройки');
+  });
+  await check(page, label, '«Настроить» включает режим, «Готово» выключает', async () => {
+    await page.click('[data-dash-edit]');
+    assert(await page.locator('#dash.editing').count() === 1, 'режим не включился');
+    assert(await page.locator('.w-handle').first().isVisible(), 'нет шапок блоков');
+    await page.click('[data-dash-edit]');
+    assert(await page.locator('#dash.editing').count() === 0, 'режим не выключился');
+  });
+  if (!mobile) {
+    await check(page, label, 'перетаскивание блока меняет его место и сохраняется', async () => {
+      await page.click('[data-dash-edit]');
+      const tasks = page.locator('.grid-stack-item[gs-id="tasks"]');
+      const before = await tasks.getAttribute('gs-x');
+      const h = await tasks.locator('.w-handle').boundingBox();
+      const ai = await page.locator('.grid-stack-item[gs-id="ai"]').boundingBox();
+      await page.mouse.move(h.x + 40, h.y + 15); await page.mouse.down();
+      await page.mouse.move(h.x - 200, h.y + 20, { steps: 8 }); await page.mouse.move(ai.x + 30, ai.y + 15, { steps: 12 });
+      await page.mouse.up(); await page.waitForTimeout(400);
+      const after = await tasks.getAttribute('gs-x');
+      assert(before !== after, `x: ${before} → ${after}`);
+      await page.click('[data-dash-edit]');
+      await page.reload(); await page.waitForTimeout(300);
+      assert(await page.locator('.grid-stack-item[gs-id="tasks"]').getAttribute('gs-x') === after, 'место не сохранилось');
+    });
+    await check(page, label, 'изменение размера блока за угол', async () => {
+      await page.click('[data-dash-edit]');
+      const k = page.locator('.grid-stack-item[gs-id="kpi-offers"]');
+      const w0 = +(await k.getAttribute('gs-w'));
+      const b = await k.boundingBox();
+      await page.mouse.move(b.x + b.width - 12, b.y + b.height - 12); await page.mouse.down();
+      await page.mouse.move(b.x + b.width + 160, b.y + b.height + 40, { steps: 10 }); await page.mouse.up(); await page.waitForTimeout(300);
+      const w1 = +(await k.getAttribute('gs-w')); assert(w1 > w0, `ширина ${w0} → ${w1}`);
+      await page.click('[data-dash-edit]');
+    });
+  }
+  await check(page, label, 'скрыть блок и вернуть через панель «Блоки»', async () => {
+    await page.click('[data-dash-edit]');
+    await page.locator('.grid-stack-item[gs-id="kpi-conv"] [data-w-hide]').click();
+    assert(await page.locator('.grid-stack-item[gs-id="kpi-conv"]').count() === 0, 'блок не скрылся');
+    await page.reload(); await page.waitForTimeout(300);
+    assert(await page.locator('.grid-stack-item[gs-id="kpi-conv"]').count() === 0, 'скрытие не сохранилось');
+    await page.click('[data-dash-edit]'); await page.click('[data-lib]');
+    await page.waitForSelector('#lib.open');
+    await page.locator('[data-w-toggle="kpi-conv"]').check();
+    assert(await page.locator('.grid-stack-item[gs-id="kpi-conv"]').count() === 1, 'блок не вернулся');
+    await page.locator('#lib [data-lib-close]').last().click();
+  });
+  await check(page, label, '«Сбросить» возвращает исходную раскладку', async () => {
+    await page.locator('.dash-tools [data-dash-reset]').click();
+    const x = await page.locator('.grid-stack-item[gs-id="tasks"]').getAttribute('gs-x');
+    assert(x === (mobile ? '0' : '8'), 'tasks x=' + x);
+    await page.click('[data-dash-edit]');
+  });
+  await check(page, label, 'кнопки внутри блоков работают (фильтр, задачи)', async () => {
+    await page.click('#flt [data-f="my"]');
+    assert(await page.$$eval('tbody tr[data-kp]:not(.hide)', r => r.length) === 2, 'фильтр');
+    await page.click('#flt [data-f="all"]');
+  });
+  await check(page, label, 'левая панель выезжает и прячется', async () => {
+    if (mobile) {
+      await page.click('[data-menu]'); assert(await page.locator('.side.m-open').isVisible(), 'меню не открылось');
+      await page.click('#side-ovl', { position: { x: 350, y: 300 } }); assert(await page.locator('.side.m-open').count() === 0, 'меню не закрылось');
+    } else {
+      await page.click('[data-collapse]'); await page.waitForTimeout(350);
+      assert(await page.locator('#s-dash.side-off').count() === 1, 'панель не спряталась');
+      await page.click('[data-menu]'); await page.waitForTimeout(350);
+      assert(await page.locator('#s-dash.side-off').count() === 0, 'панель не вернулась');
+    }
+  });
+  await check(page, label, 'нет горизонтальной прокрутки', async () => {
+    const w = await page.evaluate(() => [document.documentElement.scrollWidth, innerWidth]); assert(w[0] <= w[1] + 1, w.join('>'));
+  });
+  await page.close();
+}
+
 (async () => {
   const browser = await chromium.launch();
   const configs = [
@@ -470,6 +555,7 @@ async function testSprav(ctx, label) {
     await testIndex(ctx, `слой Битрикса (index.html) · ${dev}`);
     await testKp(ctx, `КП клиента (kp.html) · ${dev}`);
     await testMainExtra(ctx, `главная — детали · ${dev}`);
+    await testDash(ctx, `конструктор рабочего стола · ${dev}`, dev === 'телефон');
     await testOffer(ctx, `конструктор КП (offer.html) · ${dev}`);
     await testSprav(ctx, `справочник (spravochnik.html) · ${dev}`);
     await ctx.close();
