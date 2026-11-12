@@ -541,6 +541,28 @@ async function testDash(ctx, label, mobile) {
     assert(await page.$$eval('tbody tr[data-kp]:not(.hide)', r => r.length) === 2, 'фильтр');
     await page.click('#flt [data-f="all"]');
   });
+  await check(page, label, 'таблица КП: 7 полей по умолчанию, выбор и порядок колонок сохраняются', async () => {
+    await page.evaluate(() => localStorage.removeItem('kb-offers-cols-v1')); await page.reload(); await page.waitForTimeout(300);
+    let th = await page.$$eval('#offers-tbl th[data-col]', t => t.map(x => x.dataset.col).join(','));
+    assert(th === 'no,title,client,mgr,status,date,sum', th);
+    await page.locator('[data-cols]').scrollIntoViewIfNeeded(); await page.click('[data-cols]');
+    await page.uncheck('[data-col-on="title"]');
+    await page.click('[data-col-up="6"]');
+    th = await page.$$eval('#offers-tbl th[data-col]', t => t.map(x => x.dataset.col).join(','));
+    assert(th === 'no,client,mgr,status,sum,date', th);
+    const cells = await page.$$eval('#offers-tbl tbody tr:first-child td', t => t.length); assert(cells === 7, 'ячеек ' + cells);
+    await page.reload(); await page.waitForTimeout(300);
+    th = await page.$$eval('#offers-tbl th[data-col]', t => t.map(x => x.dataset.col).join(','));
+    assert(th === 'no,client,mgr,status,sum,date', 'после перезагрузки ' + th);
+    await page.locator('[data-cols]').scrollIntoViewIfNeeded(); await page.click('[data-cols]'); await page.click('[data-cols-reset]'); await page.click('[data-cols-close]');
+    assert(await page.locator('#colpick').isHidden(), 'список не закрылся');
+  });
+  await check(page, label, 'фильтр «Мои» работает и без колонки «Менеджер»', async () => {
+    await page.click('[data-cols]'); await page.uncheck('[data-col-on="mgr"]'); await page.click('[data-cols-close]');
+    await page.click('#flt [data-f="my"]');
+    assert(await page.$$eval('tbody tr[data-kp]:not(.hide)', r => r.length) === 2, 'фильтр');
+    await page.click('#flt [data-f="all"]'); await page.click('[data-cols]'); await page.click('[data-cols-reset]'); await page.click('[data-cols-close]');
+  });
   await check(page, label, 'левая панель выезжает и прячется', async () => {
     if (mobile) {
       await page.click('[data-menu]'); assert(await page.locator('.side.m-open').isVisible(), 'меню не открылось');
