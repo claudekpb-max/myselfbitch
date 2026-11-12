@@ -375,11 +375,29 @@
   /* справочник изменили в другой вкладке — подтягиваем новые расценки */
   window.addEventListener('storage',function(e){if(e.key==='kb-works-v1'||e.key==='kb-cat-accepted-v1'){refreshSources();renderSections();toast('Расценки обновлены из справочника')}});
 
+  /* ---------- задание от ИИ-помощника (рабочий стол → ?ai=1) ---------- */
+  function aiNum(v){var n=parseFloat(String(v==null?'':v).replace(',','.'));return isFinite(n)?n:null}
+  var BOWL_SEC=['Композитные бассейны','Плёнка ПВХ','Керамогранит','Закладные','Биобассейны'];
+  function aiRow(ref){var w=work(ref);if(w)return {kind:'work',sec:'work'};var c=item(ref);if(c)return {kind:'cat',sec:BOWL_SEC.indexOf(c.sec)>-1?'bowl':c.sku==='CHM-SET'?'extra':'eq'};return null}
+  function applyAi(a){
+    if(a.type==='edit_offer'&&a.tpl&&tpl(a.tpl)&&a.tpl!==st.tpl){var keep=st;st=fromTemplate(a.tpl,keep)}
+    ['client','phone','addr'].forEach(function(k){if(a[k])st[k]=String(a[k])});
+    ['L','W','D'].forEach(function(k){var n=aiNum(a[k]);if(n&&n>0&&n<100)st[k]=n});
+    var d=aiNum(a.disc);if(d!=null&&d>=0&&d<=50)st.disc=d;
+    recalc();
+    (a.remove||[]).forEach(function(ref){st.rows=st.rows.filter(function(r){return r.ref!==ref})});
+    (a.set_qty||[]).forEach(function(x){var q=aiNum(x&&x.qty);if(q==null)return;st.rows.forEach(function(r){if(r.ref===x.ref){r.qty=q;r.manual=true}})});
+    var added=0;(a.add||[]).forEach(function(x){var info=x&&aiRow(x.ref),q=aiNum(x&&x.qty);if(!info)return;q=q&&q>0?q:1;
+      var ex=st.rows.filter(function(r){return r.ref===x.ref})[0];if(ex){ex.qty=+ex.qty+q;ex.manual=true}else st.rows.push({id:'r'+(++uid),kind:info.kind,sec:x.sec&&KB.SECTIONS.some(function(s){return s.id===x.sec})?x.sec:info.sec,ref:x.ref,f:'',manual:true,qty:q,price:null});added++});
+    persist();setTimeout(function(){toast(a.type==='create_offer'?'КП собрано ИИ-помощником — проверьте позиции':'Правки ИИ-помощника применены'+(added?' · добавлено позиций: '+added:''))},300);
+  }
+
   /* ---------- старт ---------- */
   refreshSources();
-  var saved=KB.load(KEY,null),qs=new URLSearchParams(location.search).get('tpl');
-  if(saved&&saved.st&&tpl(saved.st.tpl)&&!qs){st=saved.st;uid=saved.uid||st.rows.length+100;$('#saved').innerHTML='<i></i>Черновик восстановлен'}
-  else{st=fromTemplate(qs&&tpl(qs)?qs:'franmer');recalc()}
+  var saved=KB.load(KEY,null),qp=new URLSearchParams(location.search),qs=qp.get('tpl'),ai=qp.get('ai')?KB.load('kb-ai-offer',null):null;
+  if(saved&&saved.st&&tpl(saved.st.tpl)&&!qs&&!(ai&&ai.type==='create_offer')){st=saved.st;uid=saved.uid||st.rows.length+100;$('#saved').innerHTML='<i></i>Черновик восстановлен'}
+  else{st=fromTemplate(qs&&tpl(qs)?qs:(ai&&tpl(ai.tpl)?ai.tpl:'franmer'));recalc()}
+  if(ai){applyAi(ai);try{localStorage.removeItem('kb-ai-offer')}catch(e){}if(history.replaceState)history.replaceState(null,'',location.pathname)}
   renderAll();
   $('#crumb-no').textContent='Новое КП № '+OFFER_NO;
 })();

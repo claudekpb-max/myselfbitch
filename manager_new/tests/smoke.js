@@ -461,9 +461,9 @@ async function testDash(ctx, label, mobile) {
   const p = await openPage(ctx, 'manager-claude.html');
   const { page } = p;
   await page.evaluate(() => { localStorage.removeItem('kb-dash-v1'); localStorage.removeItem('kb-side-off'); }); await page.reload(); await page.waitForTimeout(300);
-  await check(page, label, 'конструктор: 8 блоков, без ошибок', async () => {
+  await check(page, label, 'конструктор: 9 блоков, без ошибок', async () => {
     assert(p.errors.length === 0, p.errors.join(' | '));
-    const n = await page.$$eval('#dash .grid-stack-item', x => x.length); assert(n === 8, `блоков ${n}`);
+    const n = await page.$$eval('#dash .grid-stack-item', x => x.length); assert(n === 9, `блоков ${n}`);
   });
   await check(page, label, 'без режима настройки блоки не двигаются', async () => {
     assert(!(await page.locator('.w-handle').first().isVisible()), 'шапка блока видна вне режима настройки');
@@ -480,6 +480,7 @@ async function testDash(ctx, label, mobile) {
       await page.click('[data-dash-edit]');
       const tasks = page.locator('.grid-stack-item[gs-id="tasks"]');
       const before = await tasks.getAttribute('gs-x');
+      await tasks.scrollIntoViewIfNeeded(); await page.waitForTimeout(150);
       const h = await tasks.locator('.w-handle').boundingBox();
       const ai = await page.locator('.grid-stack-item[gs-id="ai"]').boundingBox();
       await page.mouse.move(h.x + 40, h.y + 15); await page.mouse.down();
@@ -495,6 +496,7 @@ async function testDash(ctx, label, mobile) {
       await page.click('[data-dash-edit]');
       const k = page.locator('.grid-stack-item[gs-id="kpi-offers"]');
       const w0 = +(await k.getAttribute('gs-w'));
+      await k.scrollIntoViewIfNeeded(); await page.waitForTimeout(150);
       const b = await k.boundingBox();
       await page.mouse.move(b.x + b.width - 12, b.y + b.height - 12); await page.mouse.down();
       await page.mouse.move(b.x + b.width + 160, b.y + b.height + 40, { steps: 10 }); await page.mouse.up(); await page.waitForTimeout(300);
@@ -580,6 +582,76 @@ async function testDash(ctx, label, mobile) {
   await page.close();
 }
 
+async function testAI(ctx, label) {
+  const H = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' };
+  const json = (r, status, body) => r.request().method() === 'OPTIONS' ? r.fulfill({ status: 204, headers: H }) : r.fulfill({ status, contentType: 'application/json', headers: H, body: JSON.stringify(body) });
+  let claudeReq = null;
+  await ctx.route('https://api.anthropic.com/**', r => { if (r.request().method() !== 'OPTIONS') claudeReq = JSON.parse(r.request().postData());
+    return json(r, 200, { id: 'msg_t', type: 'message', role: 'assistant', model: 'claude-opus-5-5', stop_reason: 'end_turn', usage: { input_tokens: 1, output_tokens: 1 },
+      content: [{ type: 'text', text: '{"reply":"Правлю КП","action":{"type":"edit_offer","disc":3,"add":[{"ref":"LED-RGB","qty":2}]}}' }] }); });
+  await ctx.route('https://api.openai.com/v1/chat/completions', r => json(r, 200, { choices: [{ message: { content: '{"reply":"Фото","action":{"type":"image","prompt":"pool"}}' } }] }));
+  await ctx.route('https://api.openai.com/v1/images/generations', r => json(r, 200, { data: [{ b64_json: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' }] }));
+  await ctx.route('https://api.deepseek.com/**', r => json(r, 401, { error: { message: 'bad key' } }));
+  const p = await openPage(ctx, 'manager-claude.html');
+  const { page } = p;
+  await page.evaluate(() => { ['kb-ai-cfg-v1', 'kb-ai-chat-v1', 'kb-offer-draft-v1', 'kb-dash-v1'].forEach(k => localStorage.removeItem(k)); }); await page.reload(); await page.waitForTimeout(300);
+  const idle = () => page.waitForFunction(() => !document.querySelector('#aiw').classList.contains('busy'), null, { timeout: 15000 });
+  const last = () => page.$eval('#ai-log .aiw-m:last-child', e => e.innerText);
+  await check(page, label, 'блок ИИ на месте, без ключа — демо-режим', async () => {
+    assert(await page.locator('#aiw').isVisible(), 'нет блока');
+    assert((await page.$eval('#ai-st', e => e.textContent)).includes('демо'), 'статус');
+    assert((await page.$$eval('#ai-prov option', o => o.map(x => x.textContent).join(','))) === 'Claude,ChatGPT,DeepSeek', 'провайдеры');
+  });
+  await check(page, label, 'демо: «КП Франмер 8×4 … скидка 5%» → карточка КП → конструктор', async () => {
+    await page.fill('#ai-in', 'КП Франмер 8×4 для Ирины Беловой, скидка 5%'); await page.press('#ai-in', 'Enter');
+    assert((await last()).includes('Франмер · 8×4 м'), await last());
+    await page.locator('#ai-log [data-ai-open]').last().click(); await page.waitForURL(/offer\.html/); await page.waitForTimeout(300);
+    const d = await page.evaluate(() => JSON.parse(localStorage.getItem('kb-offer-draft-v1')).st);
+    assert(d.tpl === 'franmer' && d.L === 8 && d.W === 4 && d.disc === 5, JSON.stringify([d.tpl, d.L, d.W, d.disc]));
+    assert((await page.$eval('#f-client', e => e.value)).includes('Белов'), 'клиент');
+    await page.goto(BASE + 'manager-claude.html'); await page.waitForTimeout(200);
+  });
+  await check(page, label, 'схема бассейна рисуется и скачивается', async () => {
+    await page.fill('#ai-in', 'нарисуй схему 10×4×1,6 с переливом'); await page.click('[data-ai-send]');
+    const w = await page.$eval('#ai-log .aiw-m:last-child .aiw-fig img', i => i.naturalWidth); assert(w > 100, 'ширина ' + w);
+    const dl = page.waitForEvent('download'); await page.locator('#ai-log .aiw-m:last-child [data-ai-dl]').click(); assert((await dl).suggestedFilename().endsWith('.svg'), 'файл');
+  });
+  await check(page, label, 'настройки: ключи сохраняются, панель закрывается', async () => {
+    await page.click('[data-ai-cfg]'); await page.fill('#ai-key-claude', 'sk-ant-test'); await page.fill('#ai-key-openai', 'sk-test'); await page.fill('#ai-key-deepseek', 'sk-ds'); await page.click('[data-ai-save]');
+    assert(!(await page.locator('#ai-cfg').isVisible()), 'панель не закрылась');
+    assert((await page.$eval('#ai-st', e => e.textContent)) === 'claude-opus-5-5', 'модель по умолчанию');
+  });
+  await check(page, label, 'Claude: запрос через SDK, правка КП применяется в конструкторе', async () => {
+    await page.fill('#ai-in', 'добавь две подсветки и скидку 3%'); await page.click('[data-ai-send]'); await idle();
+    assert(claudeReq && claudeReq.model === 'claude-opus-5-5' && claudeReq.fallbacks === 'default' && claudeReq.system.includes('FRM-840'), 'тело запроса');
+    assert((await last()).includes('Правка КП'), await last());
+    await page.locator('#ai-log [data-ai-open]').last().click(); await page.waitForURL(/offer\.html/); await page.waitForTimeout(300);
+    const d = await page.evaluate(() => JSON.parse(localStorage.getItem('kb-offer-draft-v1')).st);
+    const led = d.rows.filter(r => r.ref === 'LED-RGB').map(r => r.qty);
+    assert(d.tpl === 'franmer' && d.disc === 3 && led.length === 1 && led[0] === 5, JSON.stringify([d.tpl, d.disc, led]));
+    await page.goto(BASE + 'manager-claude.html'); await page.waitForTimeout(200);
+  });
+  await check(page, label, 'ChatGPT: фото генерируется', async () => {
+    await page.selectOption('#ai-prov', 'openai'); await page.fill('#ai-in', 'фото бассейна у дома'); await page.click('[data-ai-send]'); await idle();
+    assert((await page.$eval('#ai-log .aiw-m:last-child img', i => i.src)).startsWith('data:image/png'), 'нет фото');
+  });
+  await check(page, label, 'DeepSeek: понятная ошибка при неверном ключе', async () => {
+    await page.selectOption('#ai-prov', 'deepseek'); await page.fill('#ai-in', 'привет'); await page.click('[data-ai-send]'); await idle();
+    assert((await last()).includes('неверный API-ключ'), await last());
+  });
+  await check(page, label, 'диктовка: кнопка микрофона отвечает', async () => {
+    await page.click('[data-ai-mic]'); await page.waitForTimeout(200);
+    const t = await page.$eval('#toast span', e => e.textContent); assert(/Говорите|не поддерживается|микрофон/.test(t), t);
+    await page.evaluate(() => { const b = document.querySelector('#aiw'); if (b.classList.contains('rec')) b.querySelector('[data-ai-mic]').click(); });
+  });
+  await check(page, label, 'нет горизонтальной прокрутки', async () => {
+    const w = await page.evaluate(() => [document.documentElement.scrollWidth, innerWidth]); assert(w[0] <= w[1] + 1, w.join('>'));
+  });
+  await page.evaluate(() => ['kb-ai-cfg-v1', 'kb-ai-chat-v1', 'kb-offer-draft-v1'].forEach(k => localStorage.removeItem(k)));
+  await ctx.unrouteAll({ behavior: 'ignoreErrors' });
+  await page.close();
+}
+
 (async () => {
   const browser = await chromium.launch();
   const configs = [
@@ -594,6 +666,7 @@ async function testDash(ctx, label, mobile) {
     await testKp(ctx, `КП клиента (kp.html) · ${dev}`);
     await testMainExtra(ctx, `главная — детали · ${dev}`);
     await testDash(ctx, `конструктор рабочего стола · ${dev}`, dev === 'телефон');
+    await testAI(ctx, `ИИ-помощник · ${dev}`);
     await testOffer(ctx, `конструктор КП (offer.html) · ${dev}`);
     await testSprav(ctx, `справочник (spravochnik.html) · ${dev}`);
     await ctx.close();

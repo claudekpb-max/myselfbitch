@@ -19,6 +19,7 @@
   - `для-теста/` — самодостаточная копия для скачивания и открытия с диска (СТАРТ.html); на Google Диске: код/manager_new/для-теста
   - `tools/make-test-copy.sh` — пересобирает `для-теста/` из `prototype/`
   - `prototype/vendor/gridstack/` — GridStack 10.3.1 (MIT), перетаскивание и размер блоков рабочего стола
+  - `prototype/ai-assistant.js` — блок «ИИ-помощник» (Claude / ChatGPT / DeepSeek, диктовка, КП, схемы, фото); `prototype/vendor/anthropic/` — SDK Claude 1.3.0 (Apache-2.0). Ключи API только в localStorage браузера, в код и чат не кладём; для боевой — прокси через сервер
   - `tests/smoke.js` — Playwright-проверка всех страниц: из manager_new `python3 -m http.server 8765`, затем `node tests/smoke.js`
   - `tools/bx.py` — запуск PHP через админку Битрикса (логин/пароль только из env `BX_USER`/`BX_PASS`, никогда не в коде и не в чате)
 - `собственный-пляж/` — под копию лендинга собственный-пляж.рф (Битрикс, kupibas). Пока пусто: ждём архив резервной копии из админки.

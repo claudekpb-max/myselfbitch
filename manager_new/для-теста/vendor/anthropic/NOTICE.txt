@@ -1,0 +1,3 @@
+@anthropic-ai/sdk 1.3.0 — официальный SDK Claude (Anthropic), лицензия Apache-2.0.
+Собран в один файл (esbuild, IIFE → window.Anthropic) для работы ИИ-помощника прямо со страницы.
+https://github.com/anthropics/anthropic-sdk-typescript
