@@ -520,6 +520,22 @@ async function testDash(ctx, label, mobile) {
     assert(x === (mobile ? '0' : '8'), 'tasks x=' + x);
     await page.click('[data-dash-edit]');
   });
+  await check(page, label, 'уменьшенный блок масштабируется, а не обрезается', async () => {
+    const r = await page.evaluate(async () => {
+      const g = KBDash.grid, el = document.querySelector('.grid-stack-item[gs-id="offers"]');
+      g.update(el, { w: g.getColumn() === 1 ? 1 : 5, h: 3 }); await new Promise(r => setTimeout(r, 250)); KBDash.fitAll();
+      const out = [...document.querySelectorAll('#dash .w-body')].map(b => ({ id: b.closest('.grid-stack-item').getAttribute('gs-id'), z: +b.dataset.zoom, clip: b.scrollHeight > b.clientHeight + 2 || b.scrollWidth > b.clientWidth + 2 }));
+      return { cols: g.getColumn(), out };
+    });
+    if (r.cols === 1) return;
+    const o = r.out.find(x => x.id === 'offers'); assert(o.z < 1, 'масштаб не уменьшился: ' + o.z);
+    const clipped = r.out.filter(x => x.clip).map(x => x.id); assert(clipped.length === 0, 'обрезано: ' + clipped.join(','));
+    await page.evaluate(() => document.querySelector('.dash-tools [data-dash-reset]').click());
+  });
+  await check(page, label, 'рабочий стол во всю ширину', async () => {
+    const w = await page.evaluate(() => [document.querySelector('#dash').getBoundingClientRect().width, document.querySelector('.main').clientWidth]);
+    assert(w[0] >= w[1] - 60, `стол ${w[0]} из ${w[1]}`);
+  });
   await check(page, label, 'кнопки внутри блоков работают (фильтр, задачи)', async () => {
     await page.click('#flt [data-f="my"]');
     assert(await page.$$eval('tbody tr[data-kp]:not(.hide)', r => r.length) === 2, 'фильтр');
