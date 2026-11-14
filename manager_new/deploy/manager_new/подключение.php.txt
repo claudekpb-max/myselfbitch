@@ -1,0 +1,7 @@
+<?php
+/* Вставить в /manager_new/index.php и /manager_new/table/index.php
+   сразу ПОСЛЕ строки  require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");  */
+$APPLICATION->SetAdditionalCSS('/manager_new/assets/manager-2027.css');
+$APPLICATION->AddHeadScript('/manager_new/assets/manager-2027.js');
+$APPLICATION->AddHeadScript('/manager_new/assets/manager_new.js');
+?>
