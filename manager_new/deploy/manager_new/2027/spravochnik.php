@@ -1,0 +1,216 @@
+<?php require __DIR__ . '/guard.php'; ?>
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Справочник · Купибас</title>
+<script>(function(){var t=null;try{t=localStorage.getItem('kb-theme-v2')}catch(e){}document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'light')})();</script>
+<link rel="stylesheet" href="kb-ui.css">
+<script src="kb-data.js"></script>
+<style>
+.head{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:4px 0 16px} .head .grow{flex:1}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid var(--line)}
+.bar .grow{flex:1}
+.bar .inp{max-width:280px}
+.dirty{display:none;align-items:center;gap:8px;font-size:13px;color:var(--warn)} .dirty.on{display:flex}
+.dirty i{width:7px;height:7px;border-radius:50%;background:var(--warn)}
+.tbl td .inp{min-width:0}
+.w-cat{width:150px} .w-unit{width:90px} .w-price{width:130px}
+tr.changed td:first-child{box-shadow:inset 3px 0 var(--accent)}
+tr.new td:first-child{box-shadow:inset 3px 0 var(--ok)}
+tr.mis{background:var(--warn-soft)}
+.foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line);color:var(--text-3);font-size:13px}
+.note{margin:14px 0 0;color:var(--text-3);font-size:12.5px;line-height:1.55}
+.pane[hidden]{display:none}
+@media (max-width:700px){
+  .bar .inp{max-width:none;flex:1 1 100%}
+  .tbl thead{display:none}
+  .tbl tr{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;border-bottom:1px solid var(--line)}
+  .tbl td{border:0;padding:0}
+  .tbl td.wide{grid-column:1/-1}
+  .w-cat,.w-unit,.w-price{width:auto}
+  .head .btn span{display:none}
+}
+</style>
+</head>
+<body>
+<script>window.KB_BITRIX_USER=<?= json_encode($KB_USER, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;document.addEventListener('DOMContentLoaded',function(){var u=window.KB_BITRIX_USER;if(!u||!u.name)return;var p=u.name.split(/\s+/),ini=((p[0]||'?')[0]+(p[1]?p[1][0]:'')).toUpperCase();[].forEach.call(document.querySelectorAll('.side .me'),function(m){var a=m.querySelector('.avatar');if(a)a.textContent=ini;var w=m.querySelector('.who')||a&&a.nextElementSibling;if(w){w.textContent=u.name;var s=document.createElement('small');s.textContent=u.login||'Менеджер';w.appendChild(s)}})});</script>
+
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></symbol>
+  <symbol id="i-sync" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.4 6.4L3 16M3 12a9 9 0 0 1 15.4-6.4L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+</svg>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><a href="index.php"><img src="logo.png" alt="Купибас"></a></div>
+    <nav class="nav">
+      <a href="index.php"><svg class="ic"><use href="#i-home"/></svg>Рабочий стол</a>
+      <a href="offer.php"><svg class="ic"><use href="#i-plus"/></svg>Новое предложение</a>
+      <a href="index.php#offers"><svg class="ic"><use href="#i-list"/></svg>Предложения<span class="cnt">1 284</span></a>
+      <a class="on" href="spravochnik.php"><svg class="ic"><use href="#i-book"/></svg>Справочник</a>
+      <a href="#" class="nav-theme" data-theme-toggle title="Переключить светлую / тёмную тему (⇧D)"><svg class="ic t-moon"><use href="#i-moon"/></svg><svg class="ic t-sun"><use href="#i-sun"/></svg><span class="t-dark">Тёмная тема</span><span class="t-light">Светлая тема</span></a>
+    </nav>
+    <div class="sp"></div>
+    <div class="me"><div class="avatar">АК</div><div>Анна Кузнецова<small>Менеджер</small></div></div>
+  </aside>
+  <main class="main">
+    <div class="top" id="top">
+      <a class="icon-btn back" href="index.php" title="Назад"><svg class="ic"><use href="#i-left"/></svg></a>
+      <div class="crumbs"><a href="index.php">Рабочий стол</a> / <b>Справочник</b></div>
+      <div class="grow"></div>
+      <button class="theme" data-theme-toggle aria-label="Сменить тему"><svg class="ic sun"><use href="#i-sun"/></svg><svg class="ic moon"><use href="#i-moon"/></svg></button>
+    </div>
+    <div class="wrap">
+      <div class="head">
+        <div class="grow"><h1 class="ttl">Справочник</h1><p class="sub">Расценки на работы и каталог товаров — отсюда берутся цены в конструкторе КП.</p></div>
+        <a class="btn pri" href="offer.php"><svg class="ic"><use href="#i-plus"/></svg><span>Новое предложение</span></a>
+      </div>
+      <div class="tabs" role="tablist" style="display:inline-flex">
+        <button role="tab" data-tab="works" class="on">Работы и расценки</button>
+        <button role="tab" data-tab="catalog">Каталог и цены 1С</button>
+      </div>
+
+      <!-- ===== Работы ===== -->
+      <section class="card pane" id="p-works">
+        <div class="bar">
+          <input class="inp" id="w-q" placeholder="Поиск по работам…" autocomplete="off">
+          <select class="inp" id="w-cat" style="max-width:200px"><option value="">Все категории</option></select>
+          <div class="grow"></div>
+          <span class="dirty" id="dirty"><i></i>Есть несохранённые изменения</span>
+          <button class="btn" id="w-add"><svg class="ic"><use href="#i-plus"/></svg>Добавить работу</button>
+        </div>
+        <div style="overflow-x:auto"><table class="tbl" id="w-tbl">
+          <thead><tr><th>Категория</th><th>Работа</th><th>Ед.</th><th class="r">Цена, ₽</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <div class="foot">
+          <span id="w-count"></span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn ghost" id="w-reset" title="Вернуть исходные расценки">Сбросить к исходным</button>
+            <button class="btn" id="w-cancel" disabled><svg class="ic"><use href="#i-undo"/></svg>Отменить</button>
+            <button class="btn dark" id="w-save" disabled><svg class="ic"><use href="#i-save"/></svg>Сохранить расценки</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Каталог ===== -->
+      <section class="card pane" id="p-catalog" hidden>
+        <div class="bar">
+          <input class="inp" id="c-q" placeholder="Название или артикул…" autocomplete="off">
+          <select class="inp" id="c-sec" style="max-width:220px"><option value="">Все разделы каталога</option></select>
+          <label style="display:flex;gap:6px;align-items:center;font-size:13px;color:var(--text-2)"><input type="checkbox" id="c-mis"> Только расхождения</label>
+          <div class="grow"></div>
+          <span class="chip" id="c-status">Не сверялось с 1С</span>
+          <button class="btn" id="c-check"><svg class="ic"><use href="#i-sync"/></svg>Сверить с 1С</button>
+          <button class="btn pri" id="c-apply" hidden><svg class="ic"><use href="#i-check"/></svg>Принять все цены 1С</button>
+        </div>
+        <div style="overflow-x:auto"><table class="tbl" id="c-tbl">
+          <thead><tr><th>Артикул</th><th>Наименование</th><th>Раздел</th><th>Ед.</th><th class="r">Цена сайта</th><th class="r">Цена 1С</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <div class="foot"><span id="c-count"></span><button class="btn ghost" id="c-reset">Отменить принятые цены</button></div>
+      </section>
+      <p class="note">Прототип: данные демонстрационные и сохраняются в этом браузере. В рабочей версии каталог — это каталог сайта kupibas.ru (тот же инфоблок и структура разделов), цены сверяются с 1С через обмен; расценки работ хранятся в справочнике на сервере с историей изменений.</p>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"><svg class="ic" style="width:16px;height:16px"><use href="#i-check"/></svg><span></span></div>
+
+<script>
+(function(){
+  'use strict';
+  var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return [].slice.call((r||document).querySelectorAll(s))};
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function toast(t){var el=$('#toast');$('span',el).textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('show')},2600)}
+  function clone(x){return JSON.parse(JSON.stringify(x))}
+
+  /* ---------- Работы ---------- */
+  var saved=KB.works(),works=clone(saved),seq=0;
+  function isDirty(){return JSON.stringify(saved)!==JSON.stringify(works)}
+  function origOf(id){return saved.filter(function(w){return w.id===id})[0]}
+  function cats(){var c={};works.forEach(function(w){if(w.cat)c[w.cat]=1});return Object.keys(c)}
+  function renderCats(){var cur=$('#w-cat').value;$('#w-cat').innerHTML='<option value="">Все категории</option>'+cats().map(function(c){return '<option'+(c===cur?' selected':'')+'>'+esc(c)+'</option>'}).join('')}
+  function renderWorks(){
+    var q=$('#w-q').value.trim().toLowerCase(),cat=$('#w-cat').value;
+    var list=works.filter(function(w){return (!cat||w.cat===cat)&&(w.name+' '+w.cat).toLowerCase().indexOf(q)>-1});
+    $('#w-tbl tbody').innerHTML=list.length?list.map(function(w){var o=origOf(w.id),cls=!o?'new':(JSON.stringify(o)!==JSON.stringify(w)?'changed':'');
+      return '<tr data-id="'+w.id+'" class="'+cls+'"><td class="w-cat"><input class="inp" data-f="cat" value="'+esc(w.cat)+'" list="cat-list" aria-label="Категория"></td>'+
+      '<td class="wide"><input class="inp" data-f="name" value="'+esc(w.name)+'" aria-label="Работа" placeholder="Название работы"></td>'+
+      '<td class="w-unit"><input class="inp" data-f="unit" value="'+esc(w.unit)+'" aria-label="Единица" list="unit-list"></td>'+
+      '<td class="w-price"><input class="inp num" data-f="price" type="number" min="0" step="10" value="'+w.price+'" aria-label="Цена, ₽">'+(o&&o.price!==w.price?'<small style="display:block;color:var(--text-3);font-size:11.5px;text-align:right">было '+KB.money(o.price)+'</small>':'')+'</td>'+
+      '<td><button class="icon-btn danger" data-wdel="'+w.id+'" title="Удалить работу"><svg class="ic"><use href="#i-trash"/></svg></button></td></tr>'}).join(''):'<tr><td colspan="5" class="empty">Ничего не найдено</td></tr>';
+    $('#w-count').textContent='Работ: '+works.length+(list.length!==works.length?' · показано '+list.length:'');
+    syncDirty();
+  }
+  function syncDirty(){var d=isDirty();$('#dirty').classList.toggle('on',d);$('#w-save').disabled=!d;$('#w-cancel').disabled=!d}
+  function validateWorks(){var bad=works.filter(function(w){return !w.name.trim()||!w.unit.trim()||!(w.price>=0)});
+    $$('#w-tbl tr[data-id]').forEach(function(tr){var w=works.filter(function(x){return x.id===tr.dataset.id})[0];tr.querySelector('[data-f="name"]').classList.toggle('bad',!w.name.trim());tr.querySelector('[data-f="unit"]').classList.toggle('bad',!w.unit.trim())});
+    return !bad.length}
+  var dl=document.createElement('div');dl.innerHTML='<datalist id="cat-list"></datalist><datalist id="unit-list"><option>м³</option><option>м²</option><option>пог. м</option><option>шт</option><option>компл</option><option>рейс</option><option>выезд</option></datalist>';document.body.appendChild(dl);
+  function fillCatList(){$('#cat-list').innerHTML=cats().map(function(c){return '<option>'+esc(c)+'</option>'}).join('')}
+
+  /* ---------- Каталог ---------- */
+  var cat=KB.catalog(),check=null;
+  function renderSecs(){var s={};cat.forEach(function(c){s[c.sec]=1});$('#c-sec').innerHTML='<option value="">Все разделы каталога</option>'+Object.keys(s).map(function(x){return '<option>'+esc(x)+'</option>'}).join('')}
+  function fmt(p,cur){return cur==='EUR'?'€ '+KB.num(p):KB.money(p)}
+  function renderCat(){
+    var q=$('#c-q').value.trim().toLowerCase(),sec=$('#c-sec').value,mis=$('#c-mis').checked;
+    var list=cat.filter(function(c){var k=check&&check[c.sku];return (!sec||c.sec===sec)&&(c.name+' '+c.sku).toLowerCase().indexOf(q)>-1&&(!mis||(k&&!k.ok))});
+    $('#c-tbl tbody').innerHTML=list.length?list.map(function(c){var k=check&&check[c.sku],p1='—',act='';
+      if(k){p1=fmt(k.p1c,c.cur);act=k.ok?'<span class="chip ok">совпадает</span>':'<button class="btn" data-accept="'+c.sku+'" style="padding:5px 10px">Взять цену 1С</button>'}
+      return '<tr class="'+(k&&!k.ok?'mis':'')+'"><td class="mono">'+esc(c.sku)+'</td><td class="wide">'+esc(c.name)+'</td><td>'+esc(c.sec)+'</td><td>'+esc(c.unit)+'</td><td class="r mono">'+fmt(c.price,c.cur)+'</td><td class="r mono">'+p1+'</td><td>'+act+'</td></tr>'}).join(''):'<tr><td colspan="7" class="empty">'+(mis?'Расхождений нет':'Ничего не найдено')+'</td></tr>';
+    var nb=check?cat.filter(function(c){return check[c.sku]&&!check[c.sku].ok}).length:0;
+    $('#c-count').textContent='Товаров: '+cat.length+(list.length!==cat.length?' · показано '+list.length:'');
+    $('#c-apply').hidden=!nb;
+    if(check){var s=$('#c-status');s.className='chip '+(nb?'warn':'ok');s.textContent=nb?'Расхождений с 1С: '+nb:'Все цены совпадают с 1С'}
+  }
+  function runCheck(){var b=$('#c-check');b.disabled=true;b.innerHTML='<span class="spin"></span>Запрос в 1С…';KB.check1c(function(res){check={};res.forEach(function(x){check[x.sku]=x});b.disabled=false;b.innerHTML='<svg class="ic"><use href="#i-sync"/></svg>Сверить с 1С';renderCat();var d=new Date();toast('Сверка с 1С выполнена в '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2))})}
+
+  /* ---------- вкладки ---------- */
+  function showTab(t){$$('[data-tab]').forEach(function(b){var on=b.dataset.tab===t;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});$('#p-works').hidden=t!=='works';$('#p-catalog').hidden=t!=='catalog';if(location.hash!=='#'+t)history.replaceState(null,'','#'+t)}
+
+  document.addEventListener('click',function(e){
+    var t,el=e.target;
+    if(t=el.closest('[data-theme-toggle]')){var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';r.classList.add('theming');r.setAttribute('data-theme',n);try{localStorage.setItem('kb-theme-v2',n)}catch(x){}setTimeout(function(){r.classList.remove('theming')},400);return}
+    if(t=el.closest('[data-tab]')){showTab(t.dataset.tab);return}
+    if(el.closest('#w-add')){var id='w-new-'+Date.now()+'-'+(++seq);works.unshift({id:id,cat:$('#w-cat').value||'Прочее',name:'',unit:'шт',price:0});$('#w-q').value='';renderWorks();var inp=$('tr[data-id="'+id+'"] [data-f="name"]');inp.focus();return}
+    if(t=el.closest('[data-wdel]')){var w=works.filter(function(x){return x.id===t.dataset.wdel})[0];works=works.filter(function(x){return x!==w});renderWorks();toast('Работа «'+(w.name||'без названия')+'» удалена — нажмите «Сохранить», чтобы применить');return}
+    if(el.closest('#w-cancel')){works=clone(saved);renderCats();renderWorks();toast('Изменения отменены');return}
+    if(el.closest('#w-save')){if(!validateWorks()){toast('Заполните название и единицу у всех работ');return}if(KB.saveWorks(works)){saved=clone(works);renderCats();fillCatList();renderWorks();toast('Расценки сохранены — конструктор КП использует новые цены')}else toast('Не удалось сохранить: хранилище браузера недоступно');return}
+    if(el.closest('#w-reset')){if(!confirm('Вернуть все расценки к исходным? Ваши изменения будут потеряны.'))return;works=KB.resetWorks();saved=clone(works);renderCats();fillCatList();renderWorks();toast('Расценки сброшены к исходным');return}
+    if(el.closest('#c-check')){runCheck();return}
+    if(t=el.closest('[data-accept]')){KB.acceptPrice1c(t.dataset.accept);cat=KB.catalog();check[t.dataset.accept].ok=true;renderCat();toast('Цена 1С принята для '+t.dataset.accept);return}
+    if(el.closest('#c-apply')){Object.keys(check).forEach(function(k){if(!check[k].ok){KB.acceptPrice1c(k);check[k].ok=true}});cat=KB.catalog();renderCat();toast('Все цены 1С приняты');return}
+    if(el.closest('#c-reset')){KB.resetCatalog();cat=KB.catalog();if(check)Object.keys(check).forEach(function(k){var c=cat.filter(function(x){return x.sku===k})[0];check[k].ok=Math.abs(check[k].p1c-c.price)<0.005});renderCat();toast('Цены каталога возвращены к ценам сайта');return}
+  });
+  document.addEventListener('input',function(e){
+    var el=e.target,f=el.dataset.f;
+    if(f){var tr=el.closest('tr'),w=works.filter(function(x){return x.id===tr.dataset.id})[0];w[f]=f==='price'?Math.max(0,+el.value||0):el.value;el.classList.remove('bad');
+      var o=origOf(w.id);tr.className=!o?'new':(JSON.stringify(o)!==JSON.stringify(w)?'changed':'');syncDirty();return}
+    if(el.id==='w-q'){renderWorks();return}
+    if(el.id==='c-q'){renderCat();return}
+  });
+  document.addEventListener('change',function(e){var id=e.target.id;if(id==='w-cat')renderWorks();if(id==='c-sec'||id==='c-mis')renderCat();if(e.target.dataset.f==='cat'){renderCats();fillCatList()}});
+  document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();if(!$('#w-save').disabled)$('#w-save').click()}});
+  window.addEventListener('beforeunload',function(e){if(isDirty()){e.preventDefault();e.returnValue=''}});
+  window.addEventListener('scroll',function(){$('#top').classList.toggle('sc',window.scrollY>4)},{passive:true});
+
+  renderCats();fillCatList();renderWorks();renderSecs();renderCat();
+  showTab(location.hash==='#catalog'?'catalog':'works');
+})();
+</script>
+</body>
+</html>

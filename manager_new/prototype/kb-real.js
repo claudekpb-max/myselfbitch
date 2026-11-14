@@ -150,7 +150,8 @@
 
   window.KBReal = {
     data: function () { var d = load(KEY); return d && (d.offers && d.offers.length || d.users && d.users.length) ? d : null; },
-    me: function () { return load(ME); },
+    /* на сайте (/manager_new/2027/) — пользователь, вошедший в Битрикс; в прототипе — выбранный в «Войти как» */
+    me: function () { return window.KB_BITRIX_USER || load(ME); },
     setMe: function (u) { save(ME, u); },
     clear: function () { try { localStorage.removeItem(KEY); localStorage.removeItem(ME); } catch (e) {} },
     short: short, initials: initials,

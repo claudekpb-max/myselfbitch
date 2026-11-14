@@ -1,8 +1,5 @@
 #!/bin/sh
-# Собирает комплект для выкладки в /manager_new/ на сайте: deploy/manager_new/assets/
+# Собирает комплект для сайта (deploy/manager_new и deploy/manager_new.zip)
 set -e
 cd "$(dirname "$0")/.."
-A=deploy/manager_new/assets
-mkdir -p "$A"
-cp prototype/manager-2027.css prototype/manager-2027.js "$A/"
-echo "deploy/manager_new обновлён"
+python3 tools/make-deploy.py
