@@ -18,7 +18,7 @@
     t = new TextDecoder('utf-8').decode(u8);
     var head = t.slice(0, 3000), meta = head.match(/charset=["']?([\w-]+)/i);
     if (meta && /1251|cp-?1251/i.test(meta[1])) return new TextDecoder('windows-1251').decode(u8);
-    if (/�/.test(t)) return new TextDecoder('windows-1251').decode(u8);
+    if (/\uFFFD/.test(t)) return new TextDecoder('windows-1251').decode(u8);
     return t;
   }
   function parseCsv(text) {
