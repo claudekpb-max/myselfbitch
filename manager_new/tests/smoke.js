@@ -582,6 +582,55 @@ async function testDash(ctx, label, mobile) {
   await page.close();
 }
 
+async function testShelf(ctx, label) {
+  const p = await openPage(ctx, 'manager-claude.html');
+  const { page } = p;
+  await page.evaluate(() => ['kb-offers-removed-v1', 'kb-dash-v1', 'kb-theme-v2'].forEach(k => localStorage.removeItem(k))); await page.reload(); await page.waitForTimeout(300);
+  const ext = []; page.on('request', r => { if (!/^http:\/\/127\.0\.0\.1/.test(r.url()) && !/^data:/.test(r.url())) ext.push(r.method() + ' ' + r.url()); });
+  const rows = () => page.$$eval('#offers-tbl tbody tr[data-kp]', x => x.map(r => r.dataset.kp));
+  await check(page, label, 'тема: пункт меню «Тёмная тема» переключает и запоминается', async () => {
+    if (await page.locator('[data-menu]').isVisible()) { await page.click('[data-menu]'); await page.waitForTimeout(300); }
+    const item = page.locator('.side .nav-theme');
+    assert((await item.innerText()).includes('Тёмная тема'), await item.innerText());
+    await item.click(); await page.waitForTimeout(450);
+    assert(await page.evaluate(() => document.documentElement.getAttribute('data-theme')) === 'dark', 'не тёмная');
+    assert((await item.innerText()).includes('Светлая тема'), 'подпись не сменилась');
+    for (const u of ['offer.html', 'spravochnik.html']) {
+      const o = await ctx.newPage(); await o.goto(BASE + u); await o.waitForTimeout(200);
+      assert(await o.evaluate(() => document.documentElement.getAttribute('data-theme')) === 'dark', u + ': тема не сохранилась');
+      assert(await o.locator('.nav-theme').count() === 1, u + ': нет пункта темы'); await o.close();
+    }
+    await page.reload(); await page.waitForTimeout(200);
+    if (await page.locator('[data-menu]').isVisible()) { await page.click('[data-menu]'); await page.waitForTimeout(300); }
+    await page.locator('.side .nav-theme').click(); await page.waitForTimeout(450);
+    assert(await page.evaluate(() => document.documentElement.getAttribute('data-theme')) === 'light', 'не вернулась светлая');
+    await page.reload(); await page.waitForTimeout(200);
+  });
+  await check(page, label, 'КП убирается из списка, «Отменить» возвращает', async () => {
+    assert((await rows()).length === 5, 'строк ' + (await rows()).length);
+    const btn = page.locator('#offers-tbl tr[data-kp="2418"] [data-row-del]'); await btn.scrollIntoViewIfNeeded(); await btn.click({ force: true }); await page.waitForTimeout(200);
+    assert(!(await rows()).includes('2418'), 'не убралось');
+    assert(!(await page.locator('#drawer.open, .drawer.open').count()), 'открылась карточка КП');
+    assert((await page.$eval('#toast span', e => e.textContent)).includes('В Битриксе оно не удалено'), 'текст уведомления');
+    await page.click('#toast [data-undo]'); await page.waitForTimeout(200);
+    assert((await rows()).includes('2418'), 'не вернулось');
+  });
+  await check(page, label, 'убранные КП не видны после перезагрузки и в «Недавних», «Вернуть все»', async () => {
+    for (const no of ['2419', '2417']) { const b = page.locator(`#offers-tbl tr[data-kp="${no}"] [data-row-del]`); await b.scrollIntoViewIfNeeded(); await b.click({ force: true }); await page.waitForTimeout(150); }
+    await page.reload(); await page.waitForTimeout(300);
+    const r = await rows(); assert(r.length === 3 && !r.includes('2419') && !r.includes('2417'), r.join(','));
+    assert(await page.$eval('.recent [data-kp-open="2419"]', a => a.hidden), 'в «Недавних» осталось');
+    assert((await page.$eval('#rm-info', e => e.innerText)).includes('Убрано из списка: 2'), 'нет счётчика');
+    await page.locator('[data-restore-all]').click({ force: true }); await page.waitForTimeout(200);
+    assert((await rows()).length === 5, 'не вернулись все');
+    assert(!(await page.$eval('.recent [data-kp-open="2419"]', a => a.hidden)), 'в «Недавних» не вернулось');
+  });
+  await check(page, label, 'при удалении никаких запросов наружу (Битрикс не трогаем)', async () => assert(ext.length === 0, ext.join(' | ')));
+  await check(page, label, 'нет JS-ошибок', async () => assert(p.errors.length === 0, p.errors.join(' | ')));
+  await page.evaluate(() => ['kb-offers-removed-v1', 'kb-theme-v2'].forEach(k => localStorage.removeItem(k)));
+  await page.close();
+}
+
 async function testAI(ctx, label) {
   const H = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' };
   const json = (r, status, body) => r.request().method() === 'OPTIONS' ? r.fulfill({ status: 204, headers: H }) : r.fulfill({ status, contentType: 'application/json', headers: H, body: JSON.stringify(body) });
@@ -685,6 +734,7 @@ async function testAI(ctx, label) {
     await testKp(ctx, `КП клиента (kp.html) · ${dev}`);
     await testMainExtra(ctx, `главная — детали · ${dev}`);
     await testDash(ctx, `конструктор рабочего стола · ${dev}`, dev === 'телефон');
+    await testShelf(ctx, `тема и удаление из списка · ${dev}`);
     await testAI(ctx, `ИИ-помощник · ${dev}`);
     await testOffer(ctx, `конструктор КП (offer.html) · ${dev}`);
     await testSprav(ctx, `справочник (spravochnik.html) · ${dev}`);

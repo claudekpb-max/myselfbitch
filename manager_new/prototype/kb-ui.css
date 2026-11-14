@@ -116,3 +116,5 @@ h1.ttl{font:400 30px/1.15 var(--serif);margin:0 0 4px;letter-spacing:-.01em} .su
 @media (max-width:700px){.tabs{flex-wrap:nowrap}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media print{.side,.top,.no-print,.toast,.ovl,.modal{display:none!important} .app{display:block} body{background:#fff}}
+/* пункт меню «Тёмная / Светлая тема» */
+.nav-theme .t-sun,.nav-theme .t-light{display:none}[data-theme="dark"] .nav-theme .t-sun,[data-theme="dark"] .nav-theme .t-light{display:inline}[data-theme="dark"] .nav-theme .t-moon,[data-theme="dark"] .nav-theme .t-dark{display:none}

@@ -162,3 +162,6 @@
   };
   w.KB = KB;
 })(window);
+
+/* тема меняется сразу во всех открытых вкладках прототипа */
+window.addEventListener('storage', function (e) { if (e.key === 'kb-theme-v2' && e.newValue) document.documentElement.setAttribute('data-theme', e.newValue === 'dark' ? 'dark' : 'light'); });

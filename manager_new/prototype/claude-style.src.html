@@ -394,6 +394,13 @@ tbody tr.hide{display:none}
 /* ---------- Тост ---------- */
 .toast{position:fixed;z-index:80;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--text);color:var(--bg);padding:11px 16px;border-radius:12px;font-size:14px;box-shadow:var(--shadow-lg);transition:.25s;display:flex;gap:10px;align-items:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.show.has-undo{pointer-events:auto}
+.toast .t-undo{margin-left:6px;border:0;background:transparent;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:2px 4px}
+.row-act .del-btn:hover{color:#b5432f;background:rgba(181,67,47,.10)}
+.lnk{border:0;background:none;padding:0;font:inherit;color:var(--accent);cursor:pointer}
+.recent a[hidden]{display:none}
+.nav-theme .t-sun,.nav-theme .t-light{display:none}[data-theme="dark"] .nav-theme .t-sun,[data-theme="dark"] .nav-theme .t-light{display:inline}[data-theme="dark"] .nav-theme .t-moon,[data-theme="dark"] .nav-theme .t-dark{display:none}
+
 </style>
 <link rel="stylesheet" href="ai-assistant.css">
 </head>
@@ -422,6 +429,7 @@ tbody tr.hide{display:none}
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
 </svg>
 
@@ -438,6 +446,7 @@ tbody tr.hide{display:none}
       <a href="#offers" data-scroll-offers><svg class="ic"><use href="#i-list"/></svg>Предложения<span class="cnt">1 284</span></a>
       <a href="spravochnik.html"><svg class="ic"><use href="#i-book"/></svg>Справочник</a>
       <a href="#" data-pal><svg class="ic"><use href="#i-search"/></svg>Поиск<span class="cnt">⌘K</span></a>
+      <a href="#" class="nav-theme" data-theme-toggle title="Переключить светлую / тёмную тему (⇧D)"><svg class="ic t-moon"><use href="#i-moon"/></svg><svg class="ic t-sun"><use href="#i-sun"/></svg><span class="t-dark">Тёмная тема</span><span class="t-light">Светлая тема</span></a>
     </nav>
     <h6>Недавние</h6>
     <div class="recent">
@@ -573,7 +582,7 @@ tbody tr.hide{display:none}
         <div class="tbl-tools"><div class="seg" id="flt"><button class="on" data-f="all">Все</button><button data-f="my">Мои</button><button data-f="wait">Ждут ответа</button></div><div class="colwrap"><button class="btn" data-cols style="padding:6px 12px;font-size:13px"><svg class="ic" style="width:15px;height:15px"><use href="#i-list"/></svg>Колонки</button><div class="colpick" id="colpick" hidden><div class="cp-t">Что выводить в таблице</div><div id="cp-list"></div><div class="cp-f"><button class="btn" data-cols-reset>По умолчанию</button><button class="btn dark" data-cols-close>Готово</button></div></div></div><a class="btn" href="offer.html" style="padding:6px 12px;font-size:13px">+ Новое</a></div></div>
       <div class="card tbl">
         <table id="offers-tbl"><thead></thead><tbody></tbody></table>
-        <div class="foot"><span id="shown">Показано 5 из 1 284</span><div class="pager" id="pager"><a class="on" href="#">1</a><a href="#">2</a><a href="#">3</a><a href="#">…</a><a href="#">257</a></div></div>
+        <div class="foot"><span><span id="shown">Показано 5 из 1 284</span> <span id="rm-info" hidden></span></span><div class="pager" id="pager"><a class="on" href="#">1</a><a href="#">2</a><a href="#">3</a><a href="#">…</a><a href="#">257</a></div></div>
       </div>
         </div></div>
       </div></div>
@@ -651,7 +660,7 @@ tbody tr.hide{display:none}
   <div class="lf"><button class="btn" data-dash-reset style="flex:1">Сбросить раскладку</button><button class="btn dark" data-lib-close style="flex:1">Готово</button></div>
 </aside>
 <div class="side-ovl" id="side-ovl"></div>
-<div class="toast" id="toast"><svg class="ic" style="width:16px;height:16px"><use href="#i-check"/></svg><span></span></div>
+<div class="toast" id="toast"><svg class="ic" style="width:16px;height:16px"><use href="#i-check"/></svg><span></span><button class="t-undo" data-undo hidden>Отменить</button></div>
 
 <!-- ⌘K -->
 <div class="pal-wrap" id="pal">
@@ -705,13 +714,26 @@ tbody tr.hide{display:none}
   function load(){try{var v=JSON.parse(localStorage.getItem(KEY));if(v&&v.length){var known=v.filter(function(c){return COLS[c[0]]});DEF.forEach(function(d){if(!known.some(function(c){return c[0]===d[0]}))known.push([d[0],0])});return known}}catch(e){}return DEF.map(function(c){return c.slice()})}
   var cols=load();
   function save(){try{localStorage.setItem(KEY,JSON.stringify(cols))}catch(e){}}
-  var ACT='<td><div class="row-act"><button class="icon-btn max-btn" title="Отправить в МАКС" data-max><svg class="ic"><use href="#i-send"/></svg></button><button class="icon-btn" title="PDF" data-row-pdf><svg class="ic"><use href="#i-pdf"/></svg></button><button class="icon-btn" title="Копировать ссылку" data-row-copy><svg class="ic"><use href="#i-copy"/></svg></button><button class="icon-btn" title="Создать на основе" data-row-dup><svg class="ic"><use href="#i-more"/></svg></button></div></td>';
+  var ACT='<td><div class="row-act"><button class="icon-btn max-btn" title="Отправить в МАКС" data-max><svg class="ic"><use href="#i-send"/></svg></button><button class="icon-btn" title="PDF" data-row-pdf><svg class="ic"><use href="#i-pdf"/></svg></button><button class="icon-btn" title="Копировать ссылку" data-row-copy><svg class="ic"><use href="#i-copy"/></svg></button><button class="icon-btn" title="Создать на основе" data-row-dup><svg class="ic"><use href="#i-more"/></svg></button><button class="icon-btn del-btn" title="Убрать из списка (в Битриксе не удаляется)" data-row-del><svg class="ic"><use href="#i-trash"/></svg></button></div></td>';
+  /* «Убрать из списка»: только в этом браузере. В Битрикс ничего не отправляется и там КП не удаляется. */
+  var RKEY='kb-offers-removed-v1';
+  function removedList(){try{var v=JSON.parse(localStorage.getItem(RKEY));return Array.isArray(v)?v:[]}catch(e){return []}}
+  var removed=removedList();
+  function saveRemoved(){try{localStorage.setItem(RKEY,JSON.stringify(removed))}catch(e){}}
+  function syncSide(){[].forEach.call(document.querySelectorAll('[data-kp-open]'),function(a){if(a.closest('.recent'))a.hidden=removed.indexOf(a.dataset.kpOpen)>-1})}
+  function t0(){return document.querySelectorAll('#offers-tbl tbody tr[data-kp]:not(.hide)').length}
+  function rmInfo(){var el=$('#rm-info');if(!el)return;var sh=$('#shown');if(sh&&/^Показано \d+ из 1 284$/.test(sh.textContent))sh.textContent='Показано '+t0()+' из 1 284';el.innerHTML=removed.length?'· Убрано из списка: '+removed.length+' · <button class="lnk" data-restore-all>Вернуть все</button>':'';el.hidden=!removed.length}
+  function remove(no){no=String(no);if(removed.indexOf(no)<0){removed.push(no);saveRemoved()}render();syncSide()}
+  function restore(no){removed=removed.filter(function(x){return x!==String(no)});saveRemoved();render();syncSide()}
+  function restoreAll(){removed=[];saveRemoved();render();syncSide()}
+
   function render(){
     var on=cols.filter(function(c){return c[1]}),t=$('#offers-tbl');if(!t)return;
     var hidden=[].slice.call(t.querySelectorAll('tbody tr.hide')).map(function(tr){return tr.dataset.kp});
     t.tHead.innerHTML='<tr>'+on.map(function(c){var d=COLS[c[0]];return '<th data-col="'+c[0]+'"'+(d.th||'')+'>'+d.t+'</th>'}).join('')+'<th></th></tr>';
-    t.tBodies[0].innerHTML=ROWS.map(function(r){return '<tr data-kp="'+r.no+'" data-client="'+r.client.replace(/"/g,'&quot;')+'" data-mgr="'+r.mgr+'" data-st="'+r.st+'"'+(hidden.indexOf(r.no)>-1?' class="hide"':'')+'>'+on.map(function(c){return COLS[c[0]].td(r)}).join('')+ACT+'</tr>'}).join('');
+    t.tBodies[0].innerHTML=ROWS.filter(function(r){return removed.indexOf(r.no)<0}).map(function(r){return '<tr data-kp="'+r.no+'" data-client="'+r.client.replace(/"/g,'&quot;')+'" data-mgr="'+r.mgr+'" data-st="'+r.st+'"'+(hidden.indexOf(r.no)>-1?' class="hide"':'')+'>'+on.map(function(c){return COLS[c[0]].td(r)}).join('')+ACT+'</tr>'}).join('');
     var list=$('#cp-list');if(list)list.innerHTML=cols.map(function(c,i){return '<div class="cp-row"><label><input type="checkbox" data-col-on="'+c[0]+'"'+(c[1]?' checked':'')+'>'+COLS[c[0]].t+'</label><button class="icon-btn" data-col-up="'+i+'" title="Выше"'+(i===0?' disabled':'')+'>↑</button><button class="icon-btn" data-col-down="'+i+'" title="Ниже"'+(i===cols.length-1?' disabled':'')+'>↓</button></div>'}).join('');
+    rmInfo();
     if(window.KBDash&&KBDash.fitAll)requestAnimationFrame(KBDash.fitAll);
   }
   document.addEventListener('click',function(e){var t,el=e.target;
@@ -725,8 +747,9 @@ tbody tr.hide{display:none}
   document.addEventListener('change',function(e){var id=e.target.dataset&&e.target.dataset.colOn;if(!id)return;
     var c=cols.filter(function(x){return x[0]===id})[0];c[1]=e.target.checked?1:0;
     if(!cols.some(function(x){return x[1]})){c[1]=1;e.target.checked=true;return}save();render()});
-  render();
-  window.KBTable={render:render,cols:function(){return cols}};
+  render();syncSide();
+  window.addEventListener('storage',function(e){if(e.key===RKEY){removed=removedList();render();syncSide()}});
+  window.KBTable={render:render,cols:function(){return cols},remove:remove,restore:restore,restoreAll:restoreAll,removed:function(){return removed.slice()},rows:ROWS};
 })();
 </script>
 <script>
@@ -793,20 +816,21 @@ tbody tr.hide{display:none}
 <script>
 (function(){
   var $=function(s,r){return (r||document).querySelector(s)},$$=function(s,r){return [].slice.call((r||document).querySelectorAll(s))};
-  function toast(t){var el=document.getElementById('toast');el.querySelector('span').textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('show')},2600)}
+  function toast(t){var el=document.getElementById('toast');el.querySelector('span').textContent=t;var u=el.querySelector('[data-undo]');if(u){u.hidden=true;u.dataset.undo=''}el.classList.remove('has-undo');el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('show')},2600)}
   function token(no){var c='abcdefghjkmnpqrstuvwxyz23456789',t='';for(var i=0;i<6;i++)t+=c[(no*7+i*13)%c.length];return t}
   var CLIENTS={'2419':'Сергей Волков','2418':'ООО «Аквадом»','2417':'Ирина Белова','2416':'Коттедж «Сосны»','2415':'Павел Орлов','2412':'Гостиница «Лесная»','2409':'Кравец'};
   function openKp(no){var tr=$('tr[data-kp="'+no+'"]');if(tr){tr.click();return}var b=$('[data-open-kp]');b.click();$('#d-no').textContent='КП № '+no;$('#d-cl').textContent=CLIENTS[no]||''}
   /* фильтр таблицы */
   function applyFilter(f){var n=0;$$('tbody tr[data-kp]').forEach(function(tr){var mgr=tr.dataset.mgr==='Анна К.',wait=tr.dataset.st==='wait'||tr.dataset.st==='seen';
     var show=f==='all'||(f==='my'&&mgr)||(f==='wait'&&wait);tr.classList.toggle('hide',!show);if(show)n++});
-    $('#shown').textContent=f==='all'?'Показано 5 из 1 284':'Показано '+n+' · фильтр «'+{my:'Мои',wait:'Ждут ответа'}[f]+'»'}
+    $('#shown').textContent=f==='all'?'Показано '+n+' из 1 284':'Показано '+n+' · фильтр «'+{my:'Мои',wait:'Ждут ответа'}[f]+'»'}
   /* задачи */
   function closeSide(){$('.side').classList.remove('m-open');$('#side-ovl').classList.remove('open')}
   function taskCnt(){var all=$$('.task input'),done=all.filter(function(i){return i.checked}).length;$('#task-cnt').textContent=done+' из '+all.length}
   /* свёрнутая панель */
   try{if(localStorage.getItem('kb-side-off')==='1')$('#s-dash').classList.add('side-off')}catch(e){}
   var TPLW=[[/фарол|farol/i,'farol'],[/франмер|franmer/i,'franmer'],[/маршал|marshal/i,'marshal'],[/3d|3д/i,'film-3d'],[/плён|плен/i,'film-budget'],[/перелив/i,'tile-ovf'],[/керамогранит|плитк/i,'tile-skim'],[/био/i,'bio']];
+  function toastUndo(t,no){toast(t);var el=$('#toast'),u=el.querySelector('[data-undo]');u.hidden=false;u.dataset.undo=no;el.classList.add('has-undo');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('show','has-undo');u.hidden=true},6000)}
   function submitQ(){var ta=$('.composer textarea'),q=ta.value.trim();if(!q){ta.focus();toast('Введите номер КП, клиента или опишите новое предложение');return}
     var no=(q.match(/\b(24\d\d)\b/)||[])[1];if(no&&CLIENTS[no]){openKp(no);ta.value='';return}
     for(var i=0;i<TPLW.length;i++)if(TPLW[i][0].test(q)){location.href='offer.html?tpl='+TPLW[i][1];return}
@@ -830,6 +854,9 @@ tbody tr.hide{display:none}
     if(t=el.closest('[data-row-pdf]')){e.stopPropagation();window.open('kp.html','_blank');return}
     if(t=el.closest('[data-row-copy]')){e.stopPropagation();var no=t.closest('tr').dataset.kp;try{navigator.clipboard.writeText('https://kupibas.ru/kp/'+token(+no))}catch(x){}toast('Ссылка на КП № '+no+' скопирована');return}
     if(t=el.closest('[data-row-dup]')){e.stopPropagation();location.href='offer.html';return}
+    if(t=el.closest('[data-row-del]')){e.stopPropagation();var dn=t.closest('tr').dataset.kp;KBTable.remove(dn);toastUndo('КП № '+dn+' убрано из списка. В Битриксе оно не удалено',dn);return}
+    if(t=el.closest('[data-undo]')){var un=t.dataset.undo;if(un){KBTable.restore(un);toast('КП № '+un+' снова в списке')}return}
+    if(el.closest('[data-restore-all]')){KBTable.restoreAll();toast('Все убранные КП вернулись в список');return}
     if(t=el.closest('#pager a')){e.preventDefault();if(t.textContent==='…')return;$$('#pager a').forEach(function(a){a.classList.toggle('on',a===t)});toast('Прототип: показана страница '+t.textContent);return}
     if(el.closest('[data-collapse]')){var a=$('#s-dash');if(innerWidth<=1000){closeSide();return}a.classList.add('side-off');try{localStorage.setItem('kb-side-off','1')}catch(x){}return}
     if(el.closest('[data-menu]')){if(innerWidth<=1000){$('.side').classList.add('m-open');$('#side-ovl').classList.add('open');return}$('#s-dash').classList.remove('side-off');try{localStorage.setItem('kb-side-off','0')}catch(x){}return}
@@ -852,7 +879,7 @@ tbody tr.hide{display:none}
 (function(){
   var $=function(s,r){return (r||document).querySelector(s)},$$=function(s,r){return [].slice.call((r||document).querySelectorAll(s))};
   var KEY='kb-dash-v1',dashEl=$('#dash');if(!dashEl||!window.GridStack)return;
-  function toast(t){var el=$('#toast');el.querySelector('span').textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('show')},2600)}
+  function toast(t){var el=$('#toast');el.querySelector('span').textContent=t;var u=el.querySelector('[data-undo]');if(u){u.hidden=true;u.dataset.undo=''}el.classList.remove('has-undo');el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('show')},2600)}
   var items={};$$('.grid-stack-item',dashEl).forEach(function(el){items[el.getAttribute('gs-id')]={el:el,title:el.dataset.title}});
   var grid=GridStack.init({column:12,cellHeight:76,margin:7,staticGrid:true,handle:'.w-handle',animate:true,float:true,
     columnOpts:{breakpoints:[{w:700,c:1},{w:1000,c:6}],layout:'moveScale'}},dashEl);
