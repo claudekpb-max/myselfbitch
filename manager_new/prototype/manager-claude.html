@@ -258,54 +258,6 @@ tbody tr.hide{display:none}
 /* ---------- Конструктор рабочего стола ---------- */
 .wrap.dash-wrap{max-width:none;padding:18px 20px 80px}
 .w-body.fitted{overflow:hidden}
-/* ---------- ИИ-помощник ---------- */
-.w-fit.fill{height:100%;display:flex;flex-direction:column}
-.w-fit.fill>.aiw{flex:1;min-height:0}
-.aiw{display:flex;flex-direction:column;gap:10px;padding:14px 16px;box-sizing:border-box;height:100%}
-.aiw-hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.aiw-hd .spark{width:20px;height:20px;color:var(--accent)}
-.aiw-hd b{font-weight:600;font-size:15px}
-.aiw-sel{font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--text)}
-.aiw-st{font-size:12px;color:var(--text-3);font-family:var(--mono)}
-.aiw-st.on{color:var(--ok)}.aiw-st.on::before{content:"● "}
-.aiw-sp{flex:1}
-.aiw-cfg{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface-2);display:flex;flex-direction:column;gap:8px}
-.aiw-cfg[hidden]{display:none}
-.aiw-note{font-size:12.5px;color:var(--text-2)}
-.aiw-pr{display:grid;grid-template-columns:90px 1fr 170px;gap:8px;align-items:center}
-.aiw-pr small{grid-column:2/4;font-size:11.5px;color:var(--text-3);margin-top:-4px}
-.aiw-pr .inp{font:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--text);min-width:0}
-.aiw-cf{display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
-.aiw-cf .btn{padding:6px 12px;font-size:13px}
-.aiw-test{flex:1;font-size:12.5px;color:var(--text-2)}.aiw-test.ok{color:var(--ok)}.aiw-test.bad{color:#b3412e}
-.aiw-log{flex:1;min-height:80px;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:2px}
-.aiw-empty{margin:auto;text-align:center;color:var(--text-3);font-size:13px;line-height:1.7}
-.aiw-empty b{display:block;color:var(--text-2);font-size:14px}
-.aiw-m{display:flex}.aiw-m.u{justify-content:flex-end}
-.aiw-b{max-width:82%;padding:8px 12px;border-radius:14px;font-size:13.5px;line-height:1.5;background:var(--surface-2);word-wrap:break-word}
-.aiw-m.u .aiw-b{background:var(--accent-soft);border-bottom-right-radius:4px}
-.aiw-m.a .aiw-b{border-bottom-left-radius:4px}
-.aiw-m.err .aiw-b{background:var(--warn-soft);color:var(--text)}
-.aiw-act{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
-.aiw-act small{display:block;color:var(--text-3);font-size:12px}
-.aiw-act .btn{padding:6px 12px;font-size:13px;white-space:nowrap}
-.aiw-fig{margin:8px 0 0}.aiw-fig img{display:block;max-width:100%;max-height:340px;border-radius:10px;border:1px solid var(--line);background:#fff}
-.aiw-fig figcaption{margin-top:6px}.aiw-fig .btn{padding:5px 10px;font-size:12.5px}
-.aiw-chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.aiw-chips button{font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--text-2);cursor:pointer}
-.aiw-chips button:hover{border-color:var(--accent);color:var(--accent)}
-.aiw-busy{font-size:12.5px;color:var(--accent)}
-.aiw.busy .aiw-busy::before{content:"";display:inline-block;width:10px;height:10px;margin-right:6px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:aispin .8s linear infinite;vertical-align:-1px}
-@keyframes aispin{to{transform:rotate(360deg)}}
-.aiw-in{display:flex;gap:8px;align-items:flex-end}
-.aiw-in textarea{flex:1;font:inherit;font-size:14px;padding:9px 12px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface);color:var(--text);resize:none;min-height:42px}
-.aiw-in textarea:focus{outline:none;border-color:var(--accent)}
-.aiw-mic{width:42px;height:42px;border:1px solid var(--line-2);border-radius:12px}
-.aiw.rec .aiw-mic{background:#c4412b;color:#fff;border-color:#c4412b;animation:aipulse 1.2s ease-in-out infinite}
-@keyframes aipulse{50%{box-shadow:0 0 0 6px rgba(196,65,43,.2)}}
-.aiw-go{height:42px;padding:0 14px}
-.aiw-go .ic{width:16px;height:16px}
-@media(max-width:700px){.aiw-pr{grid-template-columns:1fr}.aiw-pr small{grid-column:1}.aiw-b{max-width:92%}.aiw-log{max-height:420px}}
 .w-fit{display:flow-root}
 .w-fit>.sec-hd{margin-top:4px}
 .btn.dark:hover{background:var(--text);opacity:.86}
@@ -443,6 +395,7 @@ tbody tr.hide{display:none}
 .toast{position:fixed;z-index:80;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--text);color:var(--bg);padding:11px 16px;border-radius:12px;font-size:14px;box-shadow:var(--shadow-lg);transition:.25s;display:flex;gap:10px;align-items:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 </style>
+<link rel="stylesheet" href="ai-assistant.css">
 </head>
 <body>
 
@@ -580,20 +533,7 @@ tbody tr.hide{display:none}
       <div class="grid-stack-item" gs-id="ai-chat" gs-x="0" gs-y="7" gs-w="12" gs-h="7" data-title="ИИ-помощник"><div class="grid-stack-item-content plain">
         <div class="w-handle"><span class="grip">⠿</span><b>ИИ-помощник</b><button class="icon-btn w-hide" data-w-hide title="Скрыть блок"><svg class="ic"><use href="#i-x"/></svg></button></div>
         <div class="w-body"><div class="w-fit fill">
-        <div class="card aiw" id="aiw">
-          <div class="aiw-hd"><svg class="spark"><use href="#spark"/></svg><b>ИИ-помощник</b><select id="ai-prov" class="aiw-sel" title="Чей ИИ отвечает"><option value="claude">Claude</option><option value="openai">ChatGPT</option><option value="deepseek">DeepSeek</option></select><span class="aiw-st" id="ai-st"></span><span class="aiw-sp"></span><button class="icon-btn" data-ai-clear title="Очистить переписку"><svg class="ic"><use href="#i-x"/></svg></button><button class="icon-btn" data-ai-cfg title="Настройки ИИ: ключи и модели"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div>
-          <div class="aiw-cfg" id="ai-cfg" hidden>
-            <div class="aiw-note">Ключи хранятся только в этом браузере и уходят напрямую выбранному провайдеру. Без ключа работает демо-режим: простые команды, схемы. Для боевой версии ключ переносим на сервер Битрикса.</div>
-            <div class="aiw-pr"><b>Claude</b><input class="inp" type="password" id="ai-key-claude" placeholder="API-ключ sk-ant-…" autocomplete="off" spellcheck="false"><input class="inp" id="ai-model-claude" autocomplete="off" spellcheck="false" title="Модель"><small>ключ: console.anthropic.com</small></div>
-            <div class="aiw-pr"><b>ChatGPT</b><input class="inp" type="password" id="ai-key-openai" placeholder="API-ключ sk-…" autocomplete="off" spellcheck="false"><input class="inp" id="ai-model-openai" autocomplete="off" spellcheck="false" title="Модель"><small>ключ: platform.openai.com</small></div>
-            <div class="aiw-pr"><b>DeepSeek</b><input class="inp" type="password" id="ai-key-deepseek" placeholder="API-ключ sk-…" autocomplete="off" spellcheck="false"><input class="inp" id="ai-model-deepseek" autocomplete="off" spellcheck="false" title="Модель"><small>ключ: platform.deepseek.com</small></div>
-            <div class="aiw-pr"><b>Фото</b><input class="inp" id="ai-model-image" placeholder="gpt-image-1" title="Модель изображений OpenAI"><small>фото рисует ChatGPT (нужен его ключ), с любым выбранным ИИ</small></div>
-            <div class="aiw-cf"><span class="aiw-test" id="ai-test"></span><button class="btn" data-ai-forget>Удалить ключи</button><button class="btn" data-ai-test>Проверить подключение</button><button class="btn dark" data-ai-save>Сохранить</button></div>
-          </div>
-          <div class="aiw-log" id="ai-log" aria-live="polite"></div>
-          <div class="aiw-chips"><button data-ai-q="Создай КП Франмер 8×4 для ">Создать КП</button><button data-ai-q="Измени текущее КП: ">Изменить КП</button><button data-ai-q="Нарисуй схему бассейна 8×4×1,5">Схема бассейна</button><button data-ai-q="Сделай фото бассейна у дома: ">Фото</button><span class="aiw-busy" id="ai-busy"></span></div>
-          <div class="aiw-in"><textarea id="ai-in" rows="2" placeholder="Напишите или надиктуйте: «КП Франмер 8×4 для Ирины Беловой, скидка 5%»"></textarea><button class="icon-btn aiw-mic" data-ai-mic title="Надиктовать голосом"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="btn dark aiw-go" data-ai-send title="Отправить (Enter)"><svg class="ic"><use href="#i-send"/></svg></button></div>
-        </div>
+        <div class="card aiw" id="aiw"></div>
         </div></div>
       </div></div>
       <div class="grid-stack-item" gs-id="ai" gs-x="0" gs-y="14" gs-w="8" gs-h="5" data-title="Что важно сегодня"><div class="grid-stack-item-content plain">

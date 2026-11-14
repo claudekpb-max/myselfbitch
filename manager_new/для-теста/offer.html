@@ -6,6 +6,7 @@
 <title>Новое предложение · Купибас</title>
 <script>(function(){var t=null;try{t=localStorage.getItem('kb-theme-v2')}catch(e){}document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'light')})();</script>
 <link rel="stylesheet" href="kb-ui.css">
+<link rel="stylesheet" href="ai-assistant.css">
 <script src="kb-data.js"></script>
 <style>
 .layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
@@ -102,6 +103,7 @@
       <div class="crumbs"><a href="manager-claude.html#offers">Предложения</a> / <b id="crumb-no">Новое КП № 2420</b></div>
       <div class="grow"></div>
       <span class="saved hide-m" id="saved"><i></i>Черновик</span>
+      <button class="btn ai-btn" data-ai-toggle title="ИИ-помощник: правит это КП по вашей команде"><svg class="spark" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.6 6.1L20 6l-4.4 4.9L22 12l-6.4 1.1L20 18l-6.4-2.1L12 22l-1.6-6.1L4 18l4.4-4.9L2 12l6.4-1.1L4 6l6.4 2.1z"/></svg><span>ИИ</span></button>
       <button class="theme" data-theme-toggle aria-label="Сменить тему"><svg class="ic sun"><use href="#i-sun"/></svg><svg class="ic moon"><use href="#i-moon"/></svg></button>
     </div>
 
@@ -190,6 +192,7 @@
   <div class="mb pv" id="pv"></div>
   <div class="mf"><a class="btn" href="kp.html" target="_blank">Пример страницы клиента</a><button class="btn" id="pv-print"><svg class="ic"><use href="#i-print"/></svg>Печать / PDF</button><button class="btn pri" data-close>Готово</button></div>
 </div>
+<aside class="ai-drawer" id="ai-drawer" aria-label="ИИ-помощник"><div class="card aiw" id="aiw"></div></aside>
 <div class="toast" id="toast"><svg class="ic" style="width:16px;height:16px"><use href="#i-check"/></svg><span></span></div>
 
 <script>
@@ -399,8 +402,12 @@
   else{st=fromTemplate(qs&&tpl(qs)?qs:(ai&&tpl(ai.tpl)?ai.tpl:'franmer'));recalc()}
   if(ai){applyAi(ai);try{localStorage.removeItem('kb-ai-offer')}catch(e){}if(history.replaceState)history.replaceState(null,'',location.pathname)}
   renderAll();
+  /* ИИ-помощник прямо в конструкторе: правки применяются к открытому КП */
+  window.KBOffer={apply:function(a){if(a.type==='create_offer'){st=fromTemplate(tpl(a.tpl)?a.tpl:st.tpl,{disc:0,eur:st.eur,client:'',phone:'',addr:'',valid:st.valid});recalc();check={}}applyAi(a);renderAll()}};
+  document.addEventListener('click',function(e){if(e.target.closest('[data-ai-toggle]')){var d=$('#ai-drawer');d.classList.toggle('open');if(d.classList.contains('open'))setTimeout(function(){var t=$('#ai-in');if(t)t.focus()},260)}});
   $('#crumb-no').textContent='Новое КП № '+OFFER_NO;
 })();
 </script>
+<script src="ai-assistant.js"></script>
 </body>
 </html>

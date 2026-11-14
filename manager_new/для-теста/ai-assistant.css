@@ -1,0 +1,55 @@
+/* ИИ-помощник — общий для рабочего стола и конструктора КП */
+.w-fit.fill{height:100%;display:flex;flex-direction:column}
+.w-fit.fill>.aiw{flex:1;min-height:0}
+.aiw{display:flex;flex-direction:column;gap:10px;padding:14px 16px;box-sizing:border-box;height:100%}
+.aiw-hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.aiw-hd .spark{width:20px;height:20px;color:var(--accent)}
+.aiw-hd b{font-weight:600;font-size:15px}
+.aiw-sel{font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--text)}
+.aiw-st{font-size:12px;color:var(--text-3);font-family:var(--mono)}
+.aiw-st.on{color:var(--ok)}.aiw-st.on::before{content:"● "}
+.aiw-sp{flex:1}
+.aiw-cfg{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface-2);display:flex;flex-direction:column;gap:8px}
+.aiw-cfg[hidden]{display:none}
+.aiw-note{font-size:12.5px;color:var(--text-2)}
+.aiw-pr{display:grid;grid-template-columns:90px 1fr 170px;gap:8px;align-items:center}
+.aiw-pr small{grid-column:2/4;font-size:11.5px;color:var(--text-3);margin-top:-4px}
+.aiw-pr .inp{font:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--text);min-width:0}
+.aiw-cf{display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.aiw-cf .btn{padding:6px 12px;font-size:13px}
+.aiw-test{flex:1;font-size:12.5px;color:var(--text-2)}.aiw-test.ok{color:var(--ok)}.aiw-test.bad{color:#b3412e}
+.aiw-log{flex:1;min-height:80px;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:2px}
+.aiw-empty{margin:auto;text-align:center;color:var(--text-3);font-size:13px;line-height:1.7}
+.aiw-empty b{display:block;color:var(--text-2);font-size:14px}
+.aiw-m{display:flex}.aiw-m.u{justify-content:flex-end}
+.aiw-b{max-width:82%;padding:8px 12px;border-radius:14px;font-size:13.5px;line-height:1.5;background:var(--surface-2);word-wrap:break-word}
+.aiw-m.u .aiw-b{background:var(--accent-soft);border-bottom-right-radius:4px}
+.aiw-m.a .aiw-b{border-bottom-left-radius:4px}
+.aiw-m.err .aiw-b{background:var(--warn-soft);color:var(--text)}
+.aiw-act{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.aiw-act small{display:block;color:var(--text-3);font-size:12px}
+.aiw-act .btn{padding:6px 12px;font-size:13px;white-space:nowrap}
+.aiw-fig{margin:8px 0 0}.aiw-fig img{display:block;max-width:100%;max-height:340px;border-radius:10px;border:1px solid var(--line);background:#fff}
+.aiw-fig figcaption{margin-top:6px}.aiw-fig .btn{padding:5px 10px;font-size:12.5px}
+.aiw-chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.aiw-chips button{font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--text-2);cursor:pointer}
+.aiw-chips button:hover{border-color:var(--accent);color:var(--accent)}
+.aiw-done{font-size:12.5px;color:var(--ok);white-space:nowrap}
+.aiw-busy{font-size:12.5px;color:var(--accent)}
+.aiw.busy .aiw-busy::before{content:"";display:inline-block;width:10px;height:10px;margin-right:6px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:aispin .8s linear infinite;vertical-align:-1px}
+@keyframes aispin{to{transform:rotate(360deg)}}
+.aiw-in{display:flex;gap:8px;align-items:flex-end}
+.aiw-in textarea{flex:1;font:inherit;font-size:14px;padding:9px 12px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface);color:var(--text);resize:none;min-height:42px}
+.aiw-in textarea:focus{outline:none;border-color:var(--accent)}
+.aiw-mic{width:42px;height:42px;border:1px solid var(--line-2);border-radius:12px}
+.aiw.rec .aiw-mic{background:#c4412b;color:#fff;border-color:#c4412b;animation:aipulse 1.2s ease-in-out infinite}
+@keyframes aipulse{50%{box-shadow:0 0 0 6px rgba(196,65,43,.2)}}
+.aiw-go{height:42px;padding:0 14px}
+.aiw-go .ic{width:16px;height:16px}
+@media(max-width:700px){.aiw-pr{grid-template-columns:1fr}.aiw-pr small{grid-column:1}.aiw-b{max-width:92%}.aiw-log{max-height:420px}}
+/* панель в конструкторе КП */
+.ai-drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100vw);z-index:60;background:var(--bg);border-left:1px solid var(--line);box-shadow:var(--shadow-lg);transform:translateX(105%);transition:transform .25s ease;display:flex;flex-direction:column;padding:12px}
+.ai-drawer.open{transform:none}
+.ai-drawer .aiw{flex:1;min-height:0;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.ai-drawer .aiw-pr{grid-template-columns:1fr}.ai-drawer .aiw-pr small{grid-column:1}
+.btn.ai-btn .spark{width:16px;height:16px;color:var(--accent)}

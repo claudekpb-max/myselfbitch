@@ -15,6 +15,31 @@
   var TPLS = KB.TEMPLATES;
   var TPLW = [[/фарол|farol/i, 'farol'], [/франмер|franmer/i, 'franmer'], [/маршал|marshal/i, 'marshal'], [/3d|3д/i, 'film-3d'], [/плён|плен/i, 'film-budget'], [/перелив/i, 'tile-ovf'], [/керамогранит|плитк/i, 'tile-skim'], [/био/i, 'bio']];
 
+  /* ---------- разметка блока (одна на рабочий стол и конструктор КП) ---------- */
+  var MIC = '<svg class="ic" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+  var SPARK = '<svg class="spark" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.6 6.1L20 6l-4.4 4.9L22 12l-6.4 1.1L20 18l-6.4-2.1L12 22l-1.6-6.1L4 18l4.4-4.9L2 12l6.4-1.1L4 6l6.4 2.1z"/></svg>';
+  var GEAR = '<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+  var X = '<svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  var SEND = '<svg class="ic" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>';
+  var ON_OFFER = !!window.KBOffer;
+  if (ON_OFFER) LOG_KEY = 'kb-ai-chat-offer-v1';
+  function provRow(p) { var v = PROV[p]; return '<div class="aiw-pr"><b>' + v.name + '</b><input class="inp" type="password" id="ai-key-' + p + '" placeholder="API-ключ ' + v.keyHint + '" autocomplete="off" spellcheck="false"><input class="inp" id="ai-model-' + p + '" autocomplete="off" spellcheck="false" title="Модель"><small>ключ: ' + v.site + '</small></div>'; }
+  if (!root.children.length) root.innerHTML =
+    '<div class="aiw-hd">' + SPARK + '<b>ИИ-помощник</b><select id="ai-prov" class="aiw-sel" title="Чей ИИ отвечает"><option value="claude">Claude</option><option value="openai">ChatGPT</option><option value="deepseek">DeepSeek</option></select>' +
+    '<span class="aiw-st" id="ai-st"></span><span class="aiw-sp"></span><button class="icon-btn" data-ai-clear title="Очистить переписку">' + X.replace('class="ic"', 'class="ic" style="opacity:.7"') + '</button><button class="icon-btn" data-ai-cfg title="Настройки ИИ: ключи и модели">' + GEAR + '</button>' +
+    (ON_OFFER ? '<button class="icon-btn" data-ai-close title="Закрыть панель">' + X + '</button>' : '') + '</div>' +
+    '<div class="aiw-cfg" id="ai-cfg" hidden><div class="aiw-note">Ключи хранятся только в этом браузере и уходят напрямую выбранному провайдеру. Без ключа работает демо-режим: простые команды, схемы. Для боевой версии ключ переносим на сервер Битрикса.</div>' +
+    provRow('claude') + provRow('openai') + provRow('deepseek') +
+    '<div class="aiw-pr"><b>Фото</b><input class="inp" id="ai-model-image" placeholder="gpt-image-1" title="Модель изображений OpenAI"><small>фото рисует ChatGPT (нужен его ключ), с любым выбранным ИИ</small></div>' +
+    '<div class="aiw-cf"><span class="aiw-test" id="ai-test"></span><button class="btn" data-ai-forget>Удалить ключи</button><button class="btn" data-ai-test>Проверить подключение</button><button class="btn dark" data-ai-save>Сохранить</button></div></div>' +
+    '<div class="aiw-log" id="ai-log" aria-live="polite"></div>' +
+    '<div class="aiw-chips">' + (ON_OFFER
+      ? '<button data-ai-q="Добавь в КП ">Добавить позицию</button><button data-ai-q="Поставь скидку %">Скидка</button><button data-ai-q="Поменяй размеры на ">Размеры</button><button data-ai-q="Нарисуй схему этого бассейна">Схема</button><button data-ai-q="Сделай фото этого бассейна у дома">Фото</button>'
+      : '<button data-ai-q="Создай КП Франмер 8×4 для ">Создать КП</button><button data-ai-q="Измени текущее КП: ">Изменить КП</button><button data-ai-q="Нарисуй схему бассейна 8×4×1,5">Схема бассейна</button><button data-ai-q="Сделай фото бассейна у дома: ">Фото</button>') +
+    '<span class="aiw-busy" id="ai-busy"></span></div>' +
+    '<div class="aiw-in"><textarea id="ai-in" rows="2" placeholder="' + (ON_OFFER ? 'Например: «добавь теплообменник и 2 прожектора, скидка 5%»' : 'Напишите или надиктуйте: «КП Франмер 8×4 для Ирины Беловой, скидка 5%»') + '"></textarea>' +
+    '<button class="icon-btn aiw-mic" data-ai-mic title="Надиктовать голосом">' + MIC + '</button><button class="btn dark aiw-go" data-ai-send title="Отправить (Enter)">' + SEND + '</button></div>';
+
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function toast(t) { var el = $('#toast'); if (!el) return; el.querySelector('span').textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('show'); }, 2600); }
   function tpl(id) { return TPLS.filter(function (t) { return t.id === id; })[0]; }
@@ -60,7 +85,7 @@
       if (a.disc != null && a.disc !== '') bits.push('скидка ' + a.disc + '%');
       if (a.add && a.add.length) bits.push('+' + a.add.length + ' поз.');
       if (a.remove && a.remove.length) bits.push('−' + a.remove.length + ' поз.');
-      return '<div class="aiw-act"><div><b>' + (a.type === 'create_offer' ? 'Новое КП' : 'Правка КП') + '</b><small>' + esc(bits.join(' · ') || 'по текущему черновику') + '</small></div><button class="btn dark" data-ai-open="' + i + '">Открыть в конструкторе</button></div>';
+      return '<div class="aiw-act"><div><b>' + (a.type === 'create_offer' ? 'Новое КП' : 'Правка КП') + '</b><small>' + esc(bits.join(' · ') || 'по текущему черновику') + '</small></div>' + (ON_OFFER ? '<span class="aiw-done">✓ применено</span>' : '<button class="btn dark" data-ai-open="' + i + '">Открыть в конструкторе</button>') + '</div>';
     }
     if (a.type === 'open_kp' && a.kp) return '<div class="aiw-act"><div><b>КП № ' + esc(a.kp) + '</b></div><button class="btn" data-open-kp="' + esc(a.kp) + '">Открыть</button></div>';
     return '';
@@ -104,7 +129,8 @@
       'Работы (id — название — ед.):',
       KB.works().map(function (w) { return w.id + ' — ' + w.name + ' — ' + w.unit; }).join('; '),
       'Используй только артикулы и id из списков выше. Если запрос неясен — action.type "none" и уточняющий вопрос в reply.',
-      draftInfo()
+      draftInfo(),
+      ON_OFFER ? 'Менеджер сейчас в конструкторе этого КП: команды по умолчанию относятся к нему (edit_offer). create_offer — только если явно просят новое КП.' : ''
     ].join('\n');
   }
   function history(q) {
@@ -210,6 +236,7 @@
     else if (/измени|поменя|добав|убер|удали|исправ/i.test(q) || (disc && !t && !dm)) a = { type: 'edit_offer' };
     else if (no && !t) a = { type: 'open_kp', kp: no[1] };
     else if (t || dm || /кп|предложени/i.test(q)) a = { type: 'create_offer' };
+    if (ON_OFFER && a.type === 'create_offer' && !t) a.type = 'edit_offer';
     if (t) a.tpl = t;
     if (dm) { a.L = num(dm[1]); a.W = num(dm[2]); if (dm[3]) a.D = num(dm[3]); }
     if (disc) a.disc = num(disc[1], 0);
@@ -225,7 +252,7 @@
     if (a.type === 'scheme') { a.steps = !/без\s+лестниц/i.test(q); if (/перелив/i.test(q)) a.tpl = 'tile-ovf'; }
     var R = {
       create_offer: 'Готово: собрал новое КП' + (t ? ' по шаблону «' + tpl(t).name + '»' : '') + '. Откройте его в конструкторе и проверьте позиции.',
-      edit_offer: 'Подготовил правки к текущему черновику КП.',
+      edit_offer: ON_OFFER ? 'Готово, правки внесены в КП.' : 'Подготовил правки к текущему черновику КП.',
       scheme: 'Схема бассейна готова.',
       image: 'Для фото нужен ключ ChatGPT — в демо-режиме нарисую схему.',
       open_kp: 'Открываю КП № ' + (no ? no[1] : ''),
@@ -273,7 +300,10 @@
     var a = res.action || { type: 'none' }, m = { r: 'a', t: res.reply || '', a: null };
     if (a.type === 'create_offer' || a.type === 'edit_offer') {
       if (a.tpl && !tpl(a.tpl)) delete a.tpl;
-      m.a = a; KB.save(HANDOFF, a); push(m); return Promise.resolve();
+      m.a = a;
+      if (ON_OFFER) { try { window.KBOffer.apply(a); m.applied = true; } catch (e) { m.t += '\nНе удалось применить: ' + e.message; } }
+      else KB.save(HANDOFF, a);
+      push(m); return Promise.resolve();
     }
     if (a.type === 'open_kp') { m.a = a; push(m); return Promise.resolve(); }
     if (a.type === 'scheme' || (a.type === 'image' && !live)) {
@@ -344,6 +374,7 @@
     if (el.closest('[data-ai-save]')) { var c = readCfg(); c.prov = $('#ai-prov').value; saveCfg(c); status(); $('#ai-cfg').hidden = true; toast('Настройки ИИ сохранены в этом браузере'); return; }
     if (el.closest('[data-ai-test]')) { test(); return; }
     if (el.closest('[data-ai-forget]')) { var c2 = cfg(); c2.keys = {}; saveCfg(c2); fillCfg(); status(); toast('Ключи удалены из браузера'); return; }
+    if (el.closest('[data-ai-close]')) { document.body.classList.remove('ai-open'); var dr = document.getElementById('ai-drawer'); if (dr) dr.classList.remove('open'); return; }
     if (el.closest('[data-ai-clear]')) { log = []; persistLog(); render(); return; }
     if (t = el.closest('[data-ai-open]')) { var m0 = log[+t.dataset.aiOpen]; if (m0 && m0.a) KB.save(HANDOFF, m0.a); location.href = 'offer.html?ai=1'; return; }
     if (t = el.closest('[data-ai-dl]')) { download(+t.dataset.aiDl); return; }

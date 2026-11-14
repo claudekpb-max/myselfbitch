@@ -647,6 +647,25 @@ async function testAI(ctx, label) {
   await check(page, label, 'нет горизонтальной прокрутки', async () => {
     const w = await page.evaluate(() => [document.documentElement.scrollWidth, innerWidth]); assert(w[0] <= w[1] + 1, w.join('>'));
   });
+  await check(page, label, 'ИИ в конструкторе КП: панель открывается, правка сразу применяется', async () => {
+    await page.evaluate(() => ['kb-ai-cfg-v1', 'kb-ai-chat-offer-v1', 'kb-offer-draft-v1'].forEach(k => localStorage.removeItem(k)));
+    await page.goto(BASE + 'offer.html?tpl=marshal'); await page.waitForTimeout(300);
+    await page.click('[data-ai-toggle]'); await page.waitForTimeout(350);
+    assert(await page.locator('#ai-in').isVisible(), 'панель не открылась');
+    assert((await page.$eval('#ai-st', e => e.textContent)).includes('демо'), 'статус');
+    await page.fill('#ai-in', 'добавь теплообменник и 2 прожектора, скидка 4%'); await page.press('#ai-in', 'Enter'); await page.waitForTimeout(400);
+    assert((await last()).includes('применено'), await last());
+    const d = await page.evaluate(() => JSON.parse(localStorage.getItem('kb-offer-draft-v1')).st);
+    assert(d.tpl === 'marshal' && d.disc === 4 && d.rows.some(r => r.ref === 'HEX-40'), JSON.stringify([d.tpl, d.disc]));
+    assert(await page.locator('tr[data-row] [data-qty]').count() > 0, 'таблица');
+    await page.fill('#ai-in', 'размеры 7 на 3,5'); await page.press('#ai-in', 'Enter'); await page.waitForTimeout(300);
+    const d2 = await page.evaluate(() => JSON.parse(localStorage.getItem('kb-offer-draft-v1')).st);
+    assert(d2.tpl === 'marshal' && d2.L === 7 && d2.W === 3.5 && d2.disc === 4, JSON.stringify([d2.tpl, d2.L, d2.W, d2.disc]));
+    await page.click('[data-ai-close]'); await page.waitForTimeout(350);
+    assert(!(await page.locator('#ai-drawer').evaluate(e => e.classList.contains('open'))), 'не закрылась');
+    const w = await page.evaluate(() => [document.documentElement.scrollWidth, innerWidth]); assert(w[0] <= w[1] + 1, w.join('>'));
+    assert(p.errors.length === 0, p.errors.join(' | '));
+  });
   await page.evaluate(() => ['kb-ai-cfg-v1', 'kb-ai-chat-v1', 'kb-offer-draft-v1'].forEach(k => localStorage.removeItem(k)));
   await ctx.unrouteAll({ behavior: 'ignoreErrors' });
   await page.close();
