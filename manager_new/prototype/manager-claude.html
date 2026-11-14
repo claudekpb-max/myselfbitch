@@ -398,11 +398,30 @@ tbody tr.hide{display:none}
 .toast .t-undo{margin-left:6px;border:0;background:transparent;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:2px 4px}
 .row-act .del-btn:hover{color:#b5432f;background:rgba(181,67,47,.10)}
 .lnk{border:0;background:none;padding:0;font:inherit;color:var(--accent);cursor:pointer}
+.st.lost{background:var(--surface-2);color:var(--text-3);text-decoration:line-through}
+#real-badge.on{color:var(--ok);font-weight:600}
+.rd{position:fixed;inset:0;z-index:90;display:none;align-items:flex-start;justify-content:center;padding:8vh 16px;background:rgba(20,20,19,.35);backdrop-filter:blur(3px)}
+.rd.open{display:flex}
+.rd-box{width:560px;max-width:100%;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-lg);overflow:hidden}
+.rd-hd{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}.rd-hd b{font:400 20px var(--serif);flex:1}
+.rd-bd{padding:16px 18px;display:flex;flex-direction:column;gap:12px;font-size:13.5px}
+.rd-st{padding:10px 12px;border-radius:12px;background:var(--surface-2);color:var(--text-2);line-height:1.6}
+.rd-st b{color:var(--text)}
+.rd-drop{border:1.5px dashed var(--line-2);border-radius:14px;padding:22px;text-align:center;color:var(--text-2);cursor:pointer;transition:.15s}
+.rd-drop:hover,.rd-drop.over{border-color:var(--accent);background:var(--accent-soft);color:var(--text)}
+.rd-drop b{display:block;color:var(--text);font-size:14.5px;margin-bottom:4px}
+.rd-help{color:var(--text-3);font-size:12.5px;line-height:1.6}.rd-help li{margin:2px 0}
+.rd-rep{font-family:var(--mono);font-size:12px;white-space:pre-wrap;color:var(--text-2);max-height:140px;overflow:auto}
+.rd-ft{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--line);background:var(--surface-2);flex-wrap:wrap}
+.rd-ft .btn{padding:7px 13px;font-size:13px}
+.as-wrap select{width:100%;padding:11px 12px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface);color:var(--text);font:inherit}
+.as-note{display:block;margin-top:6px;font-size:12px;color:var(--text-3);text-align:left}
 .recent a[hidden]{display:none}
 .nav-theme .t-sun,.nav-theme .t-light{display:none}[data-theme="dark"] .nav-theme .t-sun,[data-theme="dark"] .nav-theme .t-light{display:inline}[data-theme="dark"] .nav-theme .t-moon,[data-theme="dark"] .nav-theme .t-dark{display:none}
 
 </style>
 <link rel="stylesheet" href="ai-assistant.css">
+<script src="kb-real.js"></script>
 </head>
 <body>
 
@@ -447,6 +466,7 @@ tbody tr.hide{display:none}
       <a href="spravochnik.html"><svg class="ic"><use href="#i-book"/></svg>Справочник</a>
       <a href="#" data-pal><svg class="ic"><use href="#i-search"/></svg>Поиск<span class="cnt">⌘K</span></a>
       <a href="#" class="nav-theme" data-theme-toggle title="Переключить светлую / тёмную тему (⇧D)"><svg class="ic t-moon"><use href="#i-moon"/></svg><svg class="ic t-sun"><use href="#i-sun"/></svg><span class="t-dark">Тёмная тема</span><span class="t-light">Светлая тема</span></a>
+      <a href="#" data-real title="Загрузить выгрузку из админки Битрикса — только в этот браузер"><svg class="ic"><use href="#i-up"/></svg>Данные<span class="cnt" id="real-badge">демо</span></a>
     </nav>
     <h6>Недавние</h6>
     <div class="recent">
@@ -600,11 +620,13 @@ tbody tr.hide{display:none}
     <p>Кабинет менеджера Купибас</p>
     <form class="auth-card" name="form_auth" method="post" action="/manager/?login=yes" id="auth-form">
       <input type="hidden" name="AUTH_FORM" value="Y"><input type="hidden" name="TYPE" value="AUTH">
-      <div class="fld"><label>Логин</label><input type="text" name="USER_LOGIN" autocomplete="username"></div>
-      <div class="fld"><label>Пароль</label><input type="password" name="USER_PASSWORD" autocomplete="current-password"></div>
+      <div class="fld as-wrap" id="as-wrap" hidden><label>Войти как</label><select id="as-user"></select><small class="as-note">Прототип: выбираете пользователя из загруженной выгрузки, пароль Битрикса не нужен и никуда не отправляется.</small></div>
+      <div class="fld" data-pass-fld><label>Логин</label><input type="text" name="USER_LOGIN" autocomplete="username"></div>
+      <div class="fld" data-pass-fld><label>Пароль</label><input type="password" name="USER_PASSWORD" autocomplete="current-password"></div>
       <label class="chk"><input type="checkbox" name="USER_REMEMBER" value="Y">Запомнить меня на этом компьютере</label>
       <button class="btn-pri" type="submit">Войти</button>
       <a class="forgot" href="#" data-toast="Ссылка для восстановления пароля отправлена на почту">Забыли пароль?</a>
+      <a class="forgot" href="#" data-real>Загрузить выгрузку пользователей и КП из Битрикса</a>
     </form>
   </div>
 </div>
@@ -660,6 +682,23 @@ tbody tr.hide{display:none}
   <div class="lf"><button class="btn" data-dash-reset style="flex:1">Сбросить раскладку</button><button class="btn dark" data-lib-close style="flex:1">Готово</button></div>
 </aside>
 <div class="side-ovl" id="side-ovl"></div>
+<div class="rd" id="rd" role="dialog" aria-modal="true" aria-label="Реальные данные">
+  <div class="rd-box">
+    <div class="rd-hd"><b>Реальные данные</b><button class="icon-btn" data-rd-close title="Закрыть"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="rd-bd">
+      <div class="rd-st" id="rd-st"></div>
+      <label class="rd-drop" id="rd-drop"><input type="file" id="rd-file" multiple accept=".xls,.csv,.json,.html,.htm,.txt" hidden>
+        <b>Выберите файлы выгрузки или перетащите их сюда</b>Пользователи и КП — можно несколько файлов сразу</label>
+      <ul class="rd-help">
+        <li><b>Пользователи:</b> админка → Настройки → Пользователи → Список пользователей → внизу кнопка «Excel».</li>
+        <li><b>КП:</b> список предложений в админке → кнопка «Excel» (или CSV).</li>
+        <li>Файлы читаются только в этом браузере. В Битрикс, GitHub и куда-либо ещё ничего не отправляется.</li>
+      </ul>
+      <div class="rd-rep" id="rd-rep" hidden></div>
+    </div>
+    <div class="rd-ft"><button class="btn" data-rd-demo>Вернуть демо-данные</button><button class="btn dark" data-rd-close>Готово</button></div>
+  </div>
+</div>
 <div class="toast" id="toast"><svg class="ic" style="width:16px;height:16px"><use href="#i-check"/></svg><span></span><button class="t-undo" data-undo hidden>Отменить</button></div>
 
 <!-- ⌘K -->
@@ -693,21 +732,25 @@ tbody tr.hide{display:none}
 (function(){
   var $=function(s,r){return (r||document).querySelector(s)};
   var KEY='kb-offers-cols-v1';
-  var ROWS=[
+  var REAL=window.KBReal&&KBReal.data(),ME=window.KBReal&&KBReal.me(),PER=20,page=1,flt='all';
+  var DEMO=[
     {no:'2419',title:'Композитный бассейн 7,5×3,5',client:'Сергей Волков',mgr:'Анна К.',mgrc:'#6b5b4e',mgri:'АК',st:'new',stt:'Новое',sum:1284500,date:'06.11.2026'},
     {no:'2418',title:'Плёнка Alkorplan, 240 м²',client:'ООО «Аквадом»',mgr:'Дмитрий М.',mgrc:'#4e6b5e',mgri:'ДМ',st:'wait',stt:'Ждёт ответа',sum:612040,date:'05.11.2026'},
     {no:'2417',title:'Franmer 8×4, оборудование',client:'Ирина Белова',mgr:'Анна К.',mgrc:'#6b5b4e',mgri:'АК',st:'seen',stt:'Просмотрено · 3',sum:2975000,date:'05.11.2026'},
     {no:'2416',title:'Теплообменник, насосная группа',client:'Коттедж «Сосны»',mgr:'Елена П.',mgrc:'#8a5a44',mgri:'ЕП',st:'ok',stt:'Заказ',sum:348900,date:'03.11.2026'},
     {no:'2415',title:'Подогрев, химия на сезон',client:'Павел Орлов',mgr:'Дмитрий М.',mgrc:'#4e6b5e',mgri:'ДМ',st:'',stt:'Черновик',sum:96300,date:'01.11.2026'}
   ];
-  function money(n){return n.toLocaleString('ru-RU').replace(/,/g,' ')}
+  var ROWS=REAL&&REAL.offers&&REAL.offers.length?REAL.offers:DEMO,IS_REAL=ROWS!==DEMO;
+  function meShort(){return ME&&ME.short||'Анна К.'}
+  function money(n){return Math.round(+n||0).toLocaleString('ru-RU').replace(/,/g,' ')}
+  function escH(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
   var COLS={
-    no:{t:'№ КП',th:'',td:function(r){return '<td class="id">'+r.no+'</td>'}},
-    title:{t:'Название',td:function(r){return '<td class="ttl-c">'+r.title+'</td>'}},
-    client:{t:'Заказчик',td:function(r){return '<td class="cl"><b>'+r.client+'</b></td>'}},
-    mgr:{t:'Менеджер',td:function(r){return '<td><div class="mgr"><span class="avatar" style="background:'+r.mgrc+'">'+r.mgri+'</span>'+r.mgr+'</div></td>'}},
-    status:{t:'Статус',td:function(r){return '<td><span class="st '+r.st+'">'+r.stt+'</span></td>'}},
-    date:{t:'Дата',td:function(r){return '<td class="dt">'+r.date+'</td>'}},
+    no:{t:'№ КП',th:'',td:function(r){return '<td class="id">'+escH(r.no)+'</td>'}},
+    title:{t:'Название',td:function(r){return '<td class="ttl-c">'+escH(r.title)+'</td>'}},
+    client:{t:'Заказчик',td:function(r){return '<td class="cl"><b>'+escH(r.client)+'</b></td>'}},
+    mgr:{t:'Менеджер',td:function(r){return '<td><div class="mgr"><span class="avatar" style="background:'+r.mgrc+'">'+escH(r.mgri)+'</span>'+escH(r.mgr)+'</div></td>'}},
+    status:{t:'Статус',td:function(r){return '<td><span class="st '+r.st+'">'+escH(r.stt)+'</span></td>'}},
+    date:{t:'Дата',td:function(r){return '<td class="dt">'+escH(r.date)+'</td>'}},
     sum:{t:'Сумма, ₽',th:' style="text-align:right"',td:function(r){return '<td class="num">'+money(r.sum)+'</td>'}}
   };
   var DEF=[['no',1],['title',1],['client',1],['mgr',1],['status',1],['date',1],['sum',1]];
@@ -722,7 +765,7 @@ tbody tr.hide{display:none}
   function saveRemoved(){try{localStorage.setItem(RKEY,JSON.stringify(removed))}catch(e){}}
   function syncSide(){[].forEach.call(document.querySelectorAll('[data-kp-open]'),function(a){if(a.closest('.recent'))a.hidden=removed.indexOf(a.dataset.kpOpen)>-1})}
   function t0(){return document.querySelectorAll('#offers-tbl tbody tr[data-kp]:not(.hide)').length}
-  function rmInfo(){var el=$('#rm-info');if(!el)return;var sh=$('#shown');if(sh&&/^Показано \d+ из 1 284$/.test(sh.textContent))sh.textContent='Показано '+t0()+' из 1 284';el.innerHTML=removed.length?'· Убрано из списка: '+removed.length+' · <button class="lnk" data-restore-all>Вернуть все</button>':'';el.hidden=!removed.length}
+  function rmInfo(){var el=$('#rm-info');if(!el)return;var sh=$('#shown');if(!IS_REAL&&sh&&/^Показано \d+ из 1 284$/.test(sh.textContent))sh.textContent='Показано '+t0()+' из 1 284';el.innerHTML=removed.length?'· Убрано из списка: '+removed.length+' · <button class="lnk" data-restore-all>Вернуть все</button>':'';el.hidden=!removed.length}
   function remove(no){no=String(no);if(removed.indexOf(no)<0){removed.push(no);saveRemoved()}render();syncSide()}
   function restore(no){removed=removed.filter(function(x){return x!==String(no)});saveRemoved();render();syncSide()}
   function restoreAll(){removed=[];saveRemoved();render();syncSide()}
@@ -731,7 +774,13 @@ tbody tr.hide{display:none}
     var on=cols.filter(function(c){return c[1]}),t=$('#offers-tbl');if(!t)return;
     var hidden=[].slice.call(t.querySelectorAll('tbody tr.hide')).map(function(tr){return tr.dataset.kp});
     t.tHead.innerHTML='<tr>'+on.map(function(c){var d=COLS[c[0]];return '<th data-col="'+c[0]+'"'+(d.th||'')+'>'+d.t+'</th>'}).join('')+'<th></th></tr>';
-    t.tBodies[0].innerHTML=ROWS.filter(function(r){return removed.indexOf(r.no)<0}).map(function(r){return '<tr data-kp="'+r.no+'" data-client="'+r.client.replace(/"/g,'&quot;')+'" data-mgr="'+r.mgr+'" data-st="'+r.st+'"'+(hidden.indexOf(r.no)>-1?' class="hide"':'')+'>'+on.map(function(c){return COLS[c[0]].td(r)}).join('')+ACT+'</tr>'}).join('');
+    var vis=ROWS.filter(function(r){return removed.indexOf(r.no)<0});
+    if(IS_REAL){vis=vis.filter(function(r){return flt==='all'||(flt==='my'&&r.mgr===meShort())||(flt==='wait'&&(r.st==='wait'||r.st==='seen'))});
+      var pages=Math.max(1,Math.ceil(vis.length/PER));if(page>pages)page=pages;var from=(page-1)*PER,total=vis.length;vis=vis.slice(from,from+PER);
+      var sh=$('#shown');if(sh)sh.textContent=total?'Показано '+(from+1)+'–'+(from+vis.length)+' из '+money(total)+(flt!=='all'?' · фильтр «'+{my:'Мои',wait:'Ждут ответа'}[flt]+'»':''):'Нет КП'+(flt!=='all'?' по фильтру':'');
+      var pg=$('#pager');if(pg){var ps=[],k;for(k=1;k<=pages;k++)if(k===1||k===pages||Math.abs(k-page)<=2)ps.push(k);else if(ps[ps.length-1]!=='…')ps.push('…');
+        pg.innerHTML=ps.map(function(x){return x==='…'?'<a href="#" data-p="">…</a>':'<a href="#" data-p="'+x+'"'+(x===page?' class="on"':'')+'>'+x+'</a>'}).join('')}}
+    t.tBodies[0].innerHTML=vis.map(function(r){return '<tr data-kp="'+escH(r.no)+'" data-client="'+escH(r.client)+'" data-mgr="'+escH(r.mgr)+'" data-st="'+r.st+'"'+(hidden.indexOf(r.no)>-1?' class="hide"':'')+'>'+on.map(function(c){return COLS[c[0]].td(r)}).join('')+ACT+'</tr>'}).join('');
     var list=$('#cp-list');if(list)list.innerHTML=cols.map(function(c,i){return '<div class="cp-row"><label><input type="checkbox" data-col-on="'+c[0]+'"'+(c[1]?' checked':'')+'>'+COLS[c[0]].t+'</label><button class="icon-btn" data-col-up="'+i+'" title="Выше"'+(i===0?' disabled':'')+'>↑</button><button class="icon-btn" data-col-down="'+i+'" title="Ниже"'+(i===cols.length-1?' disabled':'')+'>↓</button></div>'}).join('');
     rmInfo();
     if(window.KBDash&&KBDash.fitAll)requestAnimationFrame(KBDash.fitAll);
@@ -749,7 +798,20 @@ tbody tr.hide{display:none}
     if(!cols.some(function(x){return x[1]})){c[1]=1;e.target.checked=true;return}save();render()});
   render();syncSide();
   window.addEventListener('storage',function(e){if(e.key===RKEY){removed=removedList();render();syncSide()}});
-  window.KBTable={render:render,cols:function(){return cols},remove:remove,restore:restore,restoreAll:restoreAll,removed:function(){return removed.slice()},rows:ROWS};
+  window.KBTable={render:render,cols:function(){return cols},remove:remove,restore:restore,restoreAll:restoreAll,removed:function(){return removed.slice()},rows:ROWS,real:IS_REAL,meShort:meShort,
+    filter:function(f){flt=f;page=1;render()},go:function(p){if(!p)return;page=+p;render();var o=$('#offers-tbl');if(o)o.scrollIntoView({block:'nearest'})},
+    clients:function(){var m={};ROWS.forEach(function(r){m[r.no]=r.client});return m}};
+  /* кто вошёл и откуда данные: меню, приветствие, «Недавние», счётчики */
+  (function(){
+    if(ME){var av=document.querySelector('.side .me .avatar'),who=document.querySelector('.side .me .who');if(av)av.textContent=KBReal.initials(ME.name);if(who)who.innerHTML=escH(ME.name)+'<small>'+escH(ME.login||'Менеджер')+'</small>'}
+    var badge=$('#real-badge');if(badge){badge.textContent=IS_REAL?money(ROWS.length):'демо';badge.classList.toggle('on',IS_REAL)}
+    if(IS_REAL){var cnt=document.querySelector('.nav [data-scroll-offers] .cnt');if(cnt)cnt.textContent=money(ROWS.length);
+      var rc=document.querySelector('.side .recent');if(rc)rc.innerHTML=ROWS.slice(0,7).map(function(r){return '<a href="#" data-kp-open="'+escH(r.no)+'"><b>'+escH(r.no)+'</b>'+escH(r.client||r.title)+(r.client&&r.title?' — '+escH(r.title):'')+'</a>'}).join('')}
+    var d=REAL,wrap=$('#as-wrap'),sel=$('#as-user');
+    if(d&&d.users&&d.users.length&&wrap&&sel){wrap.hidden=false;[].forEach.call(document.querySelectorAll('[data-pass-fld]'),function(f){f.hidden=true});
+      sel.innerHTML='<option value="">— выберите себя —</option>'+d.users.map(function(u,i){return '<option value="'+i+'"'+(ME&&ME.name===u.name?' selected':'')+'>'+escH(u.name)+(u.login?' · '+escH(u.login):'')+(u.active?'':' (неактивен)')+'</option>'}).join('')}
+    syncSide();
+  })();
 })();
 </script>
 <script>
@@ -762,7 +824,7 @@ tbody tr.hide{display:none}
     setTimeout(function(){root.classList.remove('theming')},400);
   }
   var h=new Date().getHours(),g=h<5?'Доброй ночи':h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер';
-  document.getElementById('greet').textContent=g+', Анна';
+  var meN=window.KBReal&&KBReal.me();document.getElementById('greet').textContent=g+', '+(meN&&meN.name?meN.name.split(' ')[0]:'Анна');
 
   var pal=document.getElementById('pal'),inp=pal.querySelector('input');
   function open(){pal.classList.add('open');inp.value='';filter();setTimeout(function(){inp.focus()},10)}
@@ -818,10 +880,10 @@ tbody tr.hide{display:none}
   var $=function(s,r){return (r||document).querySelector(s)},$$=function(s,r){return [].slice.call((r||document).querySelectorAll(s))};
   function toast(t){var el=document.getElementById('toast');el.querySelector('span').textContent=t;var u=el.querySelector('[data-undo]');if(u){u.hidden=true;u.dataset.undo=''}el.classList.remove('has-undo');el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('show')},2600)}
   function token(no){var c='abcdefghjkmnpqrstuvwxyz23456789',t='';for(var i=0;i<6;i++)t+=c[(no*7+i*13)%c.length];return t}
-  var CLIENTS={'2419':'Сергей Волков','2418':'ООО «Аквадом»','2417':'Ирина Белова','2416':'Коттедж «Сосны»','2415':'Павел Орлов','2412':'Гостиница «Лесная»','2409':'Кравец'};
+  var CLIENTS=window.KBTable&&KBTable.real?KBTable.clients():{'2419':'Сергей Волков','2418':'ООО «Аквадом»','2417':'Ирина Белова','2416':'Коттедж «Сосны»','2415':'Павел Орлов','2412':'Гостиница «Лесная»','2409':'Кравец'};
   function openKp(no){var tr=$('tr[data-kp="'+no+'"]');if(tr){tr.click();return}var b=$('[data-open-kp]');b.click();$('#d-no').textContent='КП № '+no;$('#d-cl').textContent=CLIENTS[no]||''}
   /* фильтр таблицы */
-  function applyFilter(f){var n=0;$$('tbody tr[data-kp]').forEach(function(tr){var mgr=tr.dataset.mgr==='Анна К.',wait=tr.dataset.st==='wait'||tr.dataset.st==='seen';
+  function applyFilter(f){if(window.KBTable&&KBTable.real){KBTable.filter(f);return}var n=0;$$('tbody tr[data-kp]').forEach(function(tr){var mgr=tr.dataset.mgr===(window.KBTable?KBTable.meShort():'Анна К.'),wait=tr.dataset.st==='wait'||tr.dataset.st==='seen';
     var show=f==='all'||(f==='my'&&mgr)||(f==='wait'&&wait);tr.classList.toggle('hide',!show);if(show)n++});
     $('#shown').textContent=f==='all'?'Показано '+n+' из 1 284':'Показано '+n+' · фильтр «'+{my:'Мои',wait:'Ждут ответа'}[f]+'»'}
   /* задачи */
@@ -831,6 +893,15 @@ tbody tr.hide{display:none}
   try{if(localStorage.getItem('kb-side-off')==='1')$('#s-dash').classList.add('side-off')}catch(e){}
   var TPLW=[[/фарол|farol/i,'farol'],[/франмер|franmer/i,'franmer'],[/маршал|marshal/i,'marshal'],[/3d|3д/i,'film-3d'],[/плён|плен/i,'film-budget'],[/перелив/i,'tile-ovf'],[/керамогранит|плитк/i,'tile-skim'],[/био/i,'bio']];
   function toastUndo(t,no){toast(t);var el=$('#toast'),u=el.querySelector('[data-undo]');u.hidden=false;u.dataset.undo=no;el.classList.add('has-undo');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('show','has-undo');u.hidden=true},6000)}
+  function rdState(){var d=KBReal.data(),me=KBReal.me(),st=$('#rd-st');
+    st.innerHTML=d?'Загружено: <b>'+(d.users||[]).length+'</b> пользователей и <b>'+(d.offers||[]).length+'</b> КП · '+new Date(d.at).toLocaleString('ru-RU')+'<br>Файлы: '+(d.files||[]).join(', ').replace(/[<>&]/g,'')+(me?'<br>Вы вошли как <b>'+me.name.replace(/[<>&]/g,'')+'</b>':(d.users&&d.users.length?'<br>Чтобы войти под собой — экран «Вход» → «Войти как»':'')):'Сейчас на рабочем столе <b>демо-данные</b>. Загрузите выгрузку из Битрикса — таблица КП, клиенты, менеджеры и вход «под собой» станут реальными.'}
+  function rdOpen(){rdState();$('#rd-rep').hidden=true;$('#rd').classList.add('open')}
+  function rdImport(files){if(!files||!files.length)return;var rep=$('#rd-rep');rep.hidden=false;rep.textContent='Читаю файлы…';
+    KBReal.importFiles(files).then(function(r){rep.textContent=r.report.join('\n');rdState();toast('Данные загружены — обновляю рабочий стол');setTimeout(function(){location.reload()},900)},
+      function(err){rep.textContent=err.message||String(err);toast('Не получилось загрузить данные')})}
+  $('#rd-file').addEventListener('change',function(){rdImport(this.files);this.value=''});
+  var drop=$('#rd-drop');['dragenter','dragover'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.add('over')})});
+  ['dragleave','drop'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.remove('over');if(ev==='drop')rdImport(e.dataTransfer.files)})});
   function submitQ(){var ta=$('.composer textarea'),q=ta.value.trim();if(!q){ta.focus();toast('Введите номер КП, клиента или опишите новое предложение');return}
     var no=(q.match(/\b(24\d\d)\b/)||[])[1];if(no&&CLIENTS[no]){openKp(no);ta.value='';return}
     for(var i=0;i<TPLW.length;i++)if(TPLW[i][0].test(q)){location.href='offer.html?tpl='+TPLW[i][1];return}
@@ -854,17 +925,20 @@ tbody tr.hide{display:none}
     if(t=el.closest('[data-row-pdf]')){e.stopPropagation();window.open('kp.html','_blank');return}
     if(t=el.closest('[data-row-copy]')){e.stopPropagation();var no=t.closest('tr').dataset.kp;try{navigator.clipboard.writeText('https://kupibas.ru/kp/'+token(+no))}catch(x){}toast('Ссылка на КП № '+no+' скопирована');return}
     if(t=el.closest('[data-row-dup]')){e.stopPropagation();location.href='offer.html';return}
+    if(el.closest('[data-real]')){e.preventDefault();closeSide();rdOpen();return}
+    if(el.closest('[data-rd-close]')||el.id==='rd'){$('#rd').classList.remove('open');return}
+    if(el.closest('[data-rd-demo]')){if(!confirm('Убрать загруженные данные из этого браузера и вернуть демо?'))return;KBReal.clear();location.reload();return}
     if(t=el.closest('[data-row-del]')){e.stopPropagation();var dn=t.closest('tr').dataset.kp;KBTable.remove(dn);toastUndo('КП № '+dn+' убрано из списка. В Битриксе оно не удалено',dn);return}
     if(t=el.closest('[data-undo]')){var un=t.dataset.undo;if(un){KBTable.restore(un);toast('КП № '+un+' снова в списке')}return}
     if(el.closest('[data-restore-all]')){KBTable.restoreAll();toast('Все убранные КП вернулись в список');return}
-    if(t=el.closest('#pager a')){e.preventDefault();if(t.textContent==='…')return;$$('#pager a').forEach(function(a){a.classList.toggle('on',a===t)});toast('Прототип: показана страница '+t.textContent);return}
+    if(t=el.closest('#pager a')){e.preventDefault();if(t.textContent==='…')return;if(window.KBTable&&KBTable.real){KBTable.go(t.dataset.p);return}$$('#pager a').forEach(function(a){a.classList.toggle('on',a===t)});toast('Прототип: показана страница '+t.textContent);return}
     if(el.closest('[data-collapse]')){var a=$('#s-dash');if(innerWidth<=1000){closeSide();return}a.classList.add('side-off');try{localStorage.setItem('kb-side-off','1')}catch(x){}return}
     if(el.closest('[data-menu]')){if(innerWidth<=1000){$('.side').classList.add('m-open');$('#side-ovl').classList.add('open');return}$('#s-dash').classList.remove('side-off');try{localStorage.setItem('kb-side-off','0')}catch(x){}return}
     if(el.closest('#side-ovl')||(innerWidth<=1000&&el.closest('.side a'))){closeSide()}
   },true);
   document.addEventListener('change',function(e){if(e.target.closest('.task'))taskCnt();if(e.target.id==='file-in'&&e.target.files[0]){toast('Смета «'+e.target.files[0].name+'» загружена — откроем в конструкторе');setTimeout(function(){location.href='offer.html'},900)}});
   $('.composer textarea').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitQ()}});
-  $('#auth-form').addEventListener('submit',function(e){e.preventDefault();var l=this.querySelector('[name=USER_LOGIN]'),p=this.querySelector('[name=USER_PASSWORD]');if(!l.value||!p.value){toast('Введите логин и пароль');(l.value?p:l).focus();return}$('.proto button[data-s="s-dash"]').click();toast('Вход выполнен (прототип)')});
+  $('#auth-form').addEventListener('submit',function(e){e.preventDefault();var sel=$('#as-user');if(sel&&!$('#as-wrap').hidden&&sel.value!==''){var u=KBReal.data().users[+sel.value];KBReal.setMe({name:u.name,short:KBReal.short(u.name),login:u.login,email:u.email});location.reload();return}var l=this.querySelector('[name=USER_LOGIN]'),p=this.querySelector('[name=USER_PASSWORD]');if(!l.value||!p.value){toast('Введите логин и пароль');(l.value?p:l).focus();return}$('.proto button[data-s="s-dash"]').click();toast('Вход выполнен (прототип)')});
   /* палитра: стрелки и Enter */
   var pal=$('#pal');pal.querySelector('input').addEventListener('keydown',function(e){var items=$$('.g a',pal).filter(function(a){return a.style.display!=='none'}),cur=items.findIndex(function(a){return a.classList.contains('on')});
     if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!items.length)return;var n=(cur+(e.key==='ArrowDown'?1:-1)+items.length)%items.length;items.forEach(function(a,i){a.classList.toggle('on',i===n)})}
@@ -916,6 +990,11 @@ tbody tr.hide{display:none}
   $$('#dash .w-body').forEach(function(b){ro.observe(b)});
   grid.on('resize resizestop added',function(){requestAnimationFrame(fitAll)});
   window.addEventListener('load',fitAll);setTimeout(fitAll,60);
+  /* реальные КП: при исходной раскладке блок таблицы растёт под 20 строк, чтобы не мельчить */
+  function growOffers(){var it=items.offers;if(!it||hidden.offers||grid.getColumn()!==12||!(window.KBTable&&KBTable.real))return;
+    var b=it.el.querySelector('.w-body'),f=b&&b.firstElementChild;if(!f)return;var z=f.style.zoom;f.style.zoom=1;var need=Math.ceil((f.scrollHeight+24)/76);f.style.zoom=z;
+    var cur=+it.el.getAttribute('gs-h');if(need>cur){grid.update(it.el,{h:need});requestAnimationFrame(fitAll)}}
+  if(!state())setTimeout(growOffers,80);
   window.KBDash={grid:grid,hide:hide,show:show,setEdit:setEdit,fitAll:fitAll};
 })();
 </script>

@@ -582,6 +582,76 @@ async function testDash(ctx, label, mobile) {
   await page.close();
 }
 
+async function testReal(ctx, label) {
+  const path = require('path'), FX = path.join(__dirname, 'fixtures');
+  const p = await openPage(ctx, 'manager-claude.html');
+  const { page } = p;
+  await page.evaluate(() => ['kb-real-v1', 'kb-me-v1', 'kb-offers-removed-v1', 'kb-dash-v1'].forEach(k => localStorage.removeItem(k))); await page.reload(); await page.waitForTimeout(300);
+  const ext = []; page.on('request', r => { if (!/^http:\/\/127\.0\.0\.1/.test(r.url()) && !/^(data|blob):/.test(r.url())) ext.push(r.method() + ' ' + r.url()); });
+  const rows = () => page.$$eval('#offers-tbl tbody tr[data-kp]', x => x.map(r => r.dataset.kp));
+  const openMenu = async () => { if (await page.locator('[data-menu]').isVisible()) { await page.click('[data-menu]'); await page.waitForTimeout(300); } };
+  await check(page, label, 'по умолчанию демо-данные, есть пункт «Данные»', async () => {
+    assert((await rows()).length === 5, 'строк ' + (await rows()).length);
+    assert((await page.$eval('#real-badge', e => e.textContent)) === 'демо', 'значок');
+  });
+  await check(page, label, 'загрузка выгрузки Битрикса (Excel-HTML cp1251 + CSV cp1251)', async () => {
+    await openMenu(); await page.locator('.side [data-real]').click(); await page.waitForTimeout(200);
+    assert(await page.locator('#rd').isVisible(), 'окно не открылось');
+    await page.setInputFiles('#rd-file', [path.join(FX, 'bitrix-users.xls'), path.join(FX, 'bitrix-offers.csv')]);
+    await page.waitForFunction(() => /пользователей 4/.test(document.querySelector('#rd-rep').textContent), null, { timeout: 5000 });
+    const rep = await page.$eval('#rd-rep', e => e.textContent); assert(/КП 47/.test(rep), rep);
+    await page.waitForLoadState('load'); await page.waitForTimeout(1500);
+    const d = await page.evaluate(() => KBReal.data());
+    assert(d.users.length === 4 && d.offers.length === 47, d.users.length + '/' + d.offers.length);
+    const o = d.offers.find(x => x.no === '3001'); assert(o && o.client === 'Клиент Тестовый 1' && o.sum === 112345 && o.title === 'Бассейн тест 1, "под ключ"' && o.st === 'wait' && o.mgr === 'Тестолег П.', JSON.stringify(o));
+  });
+  await check(page, label, 'таблица показывает реальные КП постранично', async () => {
+    assert((await rows()).length === 20, 'строк ' + (await rows()).length);
+    assert((await page.$eval('#shown', e => e.textContent)) === 'Показано 1–20 из 47', await page.$eval('#shown', e => e.textContent));
+    assert((await page.$eval('#real-badge', e => e.textContent)) === '47', 'значок');
+    const z = await page.evaluate(() => KBDash.grid.getColumn() === 12 ? +document.querySelector('.grid-stack-item[gs-id="offers"] .w-body').dataset.zoom : 1); assert(z >= 0.95, 'таблица сжата: ' + z);
+    await page.locator('#pager a[data-p="3"]').click(); await page.waitForTimeout(200);
+    assert((await rows()).length === 7 && (await page.$eval('#shown', e => e.textContent)) === 'Показано 41–47 из 47', 'страница 3');
+    assert(await page.$eval('#offers-tbl', t => t.innerHTML.includes('&quot;под ключ&quot;') || t.textContent.includes('"под ключ"')), 'кавычки');
+  });
+  await check(page, label, 'вход «Войти как» из выгрузки, без пароля', async () => {
+    await page.evaluate(() => document.querySelector('.proto button[data-s="s-auth"]').click()); await page.waitForTimeout(200);
+    assert(await page.locator('#as-user').isVisible(), 'нет выбора пользователя');
+    assert(!(await page.locator('[name=USER_PASSWORD]').isVisible()), 'поле пароля видно');
+    const opts = await page.$$eval('#as-user option', o => o.map(x => x.textContent)); assert(opts.some(t => t.includes('Тестанна Проверкина')) && opts.some(t => t.includes('(неактивен)')), opts.join('|'));
+    await page.selectOption('#as-user', { label: 'Тестанна Проверкина · anna' }); await page.click('#auth-form [type=submit]');
+    await page.waitForLoadState('load'); await page.waitForTimeout(600);
+    assert((await page.$eval('#greet', e => e.textContent)).endsWith(', Тестанна'), await page.$eval('#greet', e => e.textContent));
+    assert((await page.$eval('.side .me .who', e => e.textContent)).includes('Тестанна Проверкина'), 'имя в меню');
+  });
+  await check(page, label, '«Мои» — только КП вошедшего пользователя', async () => {
+    await page.locator('#flt button[data-f="my"]').click(); await page.waitForTimeout(200);
+    const mg = await page.$$eval('#offers-tbl tbody tr[data-kp]', x => [...new Set(x.map(r => r.dataset.mgr))]);
+    assert(mg.length === 1 && mg[0] === 'Тестанна П.', mg.join(','));
+    assert(/из 23 · фильтр «Мои»/.test(await page.$eval('#shown', e => e.textContent)), await page.$eval('#shown', e => e.textContent));
+    await page.locator('#flt button[data-f="all"]').click(); await page.waitForTimeout(150);
+  });
+  await check(page, label, 'карточка реального КП и удаление из списка работают', async () => {
+    const first = (await rows())[0];
+    await page.locator(`#offers-tbl tr[data-kp="${first}"] td`).nth(1).click(); await page.waitForTimeout(300);
+    assert((await page.$eval('#d-no', e => e.textContent)) === 'КП № ' + first, 'карточка');
+    await page.evaluate(() => document.querySelector('[data-close]') && document.querySelectorAll('#drawer [data-close]')[0].click()); await page.waitForTimeout(250);
+    const b = page.locator(`#offers-tbl tr[data-kp="${first}"] [data-row-del]`); await b.click({ force: true }); await page.waitForTimeout(200);
+    assert(!(await rows()).includes(first) && (await page.$eval('#shown', e => e.textContent)) === 'Показано 1–20 из 46', 'удаление');
+    await page.locator('#toast [data-undo]').click(); await page.waitForTimeout(150);
+  });
+  await check(page, label, 'никаких запросов наружу при загрузке и входе', async () => assert(ext.length === 0, ext.join(' | ')));
+  await check(page, label, '«Вернуть демо-данные»', async () => {
+    page.once('dialog', d => d.accept());
+    await page.evaluate(() => { document.querySelector('#rd').classList.add('open'); document.querySelector('[data-rd-demo]').click(); });
+    await page.waitForLoadState('load'); await page.waitForTimeout(600);
+    assert((await rows()).length === 5 && !(await page.evaluate(() => KBReal.data())), 'демо не вернулось');
+  });
+  await check(page, label, 'нет JS-ошибок', async () => assert(p.errors.length === 0, p.errors.join(' | ')));
+  await page.evaluate(() => ['kb-real-v1', 'kb-me-v1', 'kb-offers-removed-v1'].forEach(k => localStorage.removeItem(k)));
+  await page.close();
+}
+
 async function testShelf(ctx, label) {
   const p = await openPage(ctx, 'manager-claude.html');
   const { page } = p;
@@ -734,6 +804,7 @@ async function testAI(ctx, label) {
     await testKp(ctx, `КП клиента (kp.html) · ${dev}`);
     await testMainExtra(ctx, `главная — детали · ${dev}`);
     await testDash(ctx, `конструктор рабочего стола · ${dev}`, dev === 'телефон');
+    await testReal(ctx, `реальные данные и вход · ${dev}`);
     await testShelf(ctx, `тема и удаление из списка · ${dev}`);
     await testAI(ctx, `ИИ-помощник · ${dev}`);
     await testOffer(ctx, `конструктор КП (offer.html) · ${dev}`);
