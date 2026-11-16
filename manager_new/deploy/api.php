@@ -68,7 +68,13 @@ try {
     $id = isset($_GET['iblock']) ? (int)$_GET['iblock'] : 0;
     if ($id && !in_array($id, array_column($iblocks, 'id'), true)) kb_json(array('error' => 'Инфоблок ' . $id . ' не найден среди типа manager или нет прав'), 404);
     if (!$id) {
-        foreach ($iblocks as $ib) if (preg_match('/(кп|коммерч|предлож|offer|\bkp\b)/iu', $ib['name'] . ' ' . $ib['code'])) { $id = $ib['id']; break; }
+        $best = null; /* среди подходящих по названию — самый большой (не «Шаблоны торговых предложений») */
+        foreach ($iblocks as $ib) {
+            if (!preg_match('/(кп|коммерч|предлож|offer|\bkp\b)/iu', $ib['name'] . ' ' . $ib['code'])) continue;
+            if (preg_match('/шаблон/iu', $ib['name'])) continue;
+            if (!$best || $ib['count'] > $best['count']) $best = $ib;
+        }
+        if ($best) $id = $best['id'];
     }
     if (!$id && $iblocks) {
         $big = $iblocks;
@@ -97,7 +103,7 @@ try {
         $userIds[] = $f['CREATED_BY'];
         foreach ($pv as $code => $p) {
             if ($p['PROPERTY_TYPE'] === 'E' && $p['VALUE']) foreach ((array)$p['VALUE'] as $v) $elIds[] = (int)$v;
-            if ($p['PROPERTY_TYPE'] === 'S' && in_array($p['USER_TYPE'], array('UserID', 'employee'), true) && $p['VALUE']) foreach ((array)$p['VALUE'] as $v) $userIds[] = (int)$v;
+            if (in_array($p['USER_TYPE'], array('UserID', 'employee'), true) && $p['VALUE']) foreach ((array)$p['VALUE'] as $v) $userIds[] = (int)$v;
         }
         $raw[] = array($f, $pv);
     }
@@ -116,12 +122,14 @@ try {
             'Название' => kb_scalar($f['~NAME'] ?? $f['NAME']),
             'Дата создания' => $f['DATE_CREATE'],
             'Создал' => isset($users[(int)$f['CREATED_BY']]) ? $users[(int)$f['CREATED_BY']]['_name'] : '',
+            'Последняя активность' => $f['TIMESTAMP_X'],
+            'Ссылка' => '/bitrix/admin/iblock_element_edit.php?IBLOCK_ID=' . $id . '&type=manager&ID=' . $f['ID'] . '&lang=ru',
         );
         foreach ($pv as $code => $p) {
-            if ($p['PROPERTY_TYPE'] === 'F') continue;
+            if ($p['PROPERTY_TYPE'] === 'F' || $code === 'BLOG_POST_ID') continue;
             $v = $p['VALUE'];
             if ($p['PROPERTY_TYPE'] === 'E') { $v = array_map(function ($x) use ($elNames) { return isset($elNames[(int)$x]) ? $elNames[(int)$x] : $x; }, (array)$v); }
-            elseif ($p['PROPERTY_TYPE'] === 'S' && in_array($p['USER_TYPE'], array('UserID', 'employee'), true)) { $v = array_map(function ($x) use ($users) { return isset($users[(int)$x]) ? $users[(int)$x]['_name'] : $x; }, (array)$v); }
+            elseif (in_array($p['USER_TYPE'], array('UserID', 'employee'), true)) { $v = array_map(function ($x) use ($users) { return isset($users[(int)$x]) ? $users[(int)$x]['_name'] : $x; }, (array)$v); }
             elseif ($p['PROPERTY_TYPE'] === 'L' && isset($p['VALUE_ENUM']) && $p['VALUE_ENUM'] !== null && $p['VALUE_ENUM'] !== '') { $v = $p['VALUE_ENUM']; }
             $key = $p['NAME'] !== '' ? $p['NAME'] : $code;
             if (isset($row[$key])) $key .= ' (' . $code . ')';
@@ -134,7 +142,7 @@ try {
     foreach ($users as $u) { unset($u['_name']); $outUsers[] = $u; }
     kb_json(array(
         'iblock' => $id, 'iblockName' => $ibName, 'iblocks' => $iblocks,
-        'fields' => array_merge(array('ID', 'Название', 'Дата создания', 'Создал'), array_values(array_map(function ($p) { return $p['NAME']; }, $props))),
+        'fields' => array_merge(array('ID', 'Название', 'Дата создания', 'Создал', 'Последняя активность', 'Ссылка'), array_values(array_map(function ($p) { return $p['NAME']; }, array_filter($props, function ($p) { return $p['PROPERTY_TYPE'] !== 'F' && $p['CODE'] !== 'BLOG_POST_ID'; })))),
         'offers' => $rows, 'users' => $outUsers, 'at' => date('c'),
     ));
 } catch (\Throwable $e) {

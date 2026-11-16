@@ -256,6 +256,20 @@ tbody tr.hide{display:none}
 .colpick .cp-f .btn{padding:6px 12px;font-size:13px}
 .dt{font-family:var(--mono);font-size:12.5px;color:var(--text-2);white-space:nowrap}
 .ttl-c{color:var(--text-2)}
+/* GridStack: 6 колонок (ширина стола ~700–1000 px) — без этих правил блоки получали ширину 0 */
+.gs-6>.grid-stack-item{width:16.6667%}
+.gs-6>.grid-stack-item[gs-w="1"]{width:16.6667%}
+.gs-6>.grid-stack-item[gs-x="1"]{left:16.6667%}
+.gs-6>.grid-stack-item[gs-w="2"]{width:33.3333%}
+.gs-6>.grid-stack-item[gs-x="2"]{left:33.3333%}
+.gs-6>.grid-stack-item[gs-w="3"]{width:50.0000%}
+.gs-6>.grid-stack-item[gs-x="3"]{left:50.0000%}
+.gs-6>.grid-stack-item[gs-w="4"]{width:66.6667%}
+.gs-6>.grid-stack-item[gs-x="4"]{left:66.6667%}
+.gs-6>.grid-stack-item[gs-w="5"]{width:83.3333%}
+.gs-6>.grid-stack-item[gs-x="5"]{left:83.3333%}
+.gs-6>.grid-stack-item[gs-w="6"]{width:100.0000%}
+.gs-6>.grid-stack-item[gs-x="6"]{left:100.0000%}
 /* ---------- Конструктор рабочего стола ---------- */
 .wrap.dash-wrap{max-width:none;padding:18px 20px 80px}
 .w-body.fitted{overflow:hidden}
@@ -366,6 +380,15 @@ tbody tr.hide{display:none}
 /* ---------- Карточка КП (выезжающая панель) ---------- */
 .drawer{position:fixed;z-index:61;top:0;right:0;height:100vh;width:460px;max-width:100vw;background:var(--surface);border-left:1px solid var(--line);box-shadow:var(--shadow-lg);transform:translateX(105%);transition:transform .32s cubic-bezier(.2,.9,.3,1);display:flex;flex-direction:column}
 .drawer.open{transform:none}
+.d-real{display:none}
+.drawer.is-real .db>*:not(.d-real),.drawer.is-real .df{display:none}
+.drawer.is-real .d-real{display:flex;flex-direction:column;gap:14px}
+.d-real .dr-g{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:14px}
+.d-real .dr-g span{color:var(--text-3)}
+.d-real .dr-g b{font-weight:500;word-break:break-word}
+.d-real .dr-b{display:flex;gap:8px;flex-wrap:wrap}.d-real .dr-b .btn{padding:8px 13px;font-size:13.5px}
+.d-real .dr-n{font-size:12.5px;color:var(--text-3);line-height:1.5}
+.ct-late{color:#b5432f;font-weight:500}.ct-today{color:var(--warn);font-weight:500}
 .dh{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}
 .dh .t small{font:13px var(--mono);color:var(--text-3)} .dh .t b{display:block;font:400 22px/1.25 var(--serif);margin-top:2px}
 .dh .x{margin-left:auto}
@@ -519,7 +542,7 @@ tbody tr.hide{display:none}
         <div class="w-body"><div class="w-fit">
       <section class="hero">
         <h1><svg class="spark"><use href="#spark"/></svg><span id="greet">Добрый вечер, Анна</span></h1>
-        <p>Три предложения ждут ответа клиента. Курс евро вырос — два КП стоит пересчитать.</p>
+        <p id="greet-sub">Три предложения ждут ответа клиента. Курс евро вырос — два КП стоит пересчитать.</p>
       </section>
 
       <div class="composer">
@@ -662,6 +685,7 @@ tbody tr.hide{display:none}
   <div class="dh"><div class="t"><small id="d-no">КП № 2417</small><b id="d-cl">Ирина Белова</b></div>
     <button class="icon-btn x" data-close><svg class="ic"><use href="#i-x"/></svg></button></div>
   <div class="db">
+    <div class="d-real" id="d-real"></div>
     <div class="sum-row"><span class="st seen">Просмотрено · 3</span><span class="v">2 975 000 ₽</span></div>
     <div class="live"><i></i>Клиент сейчас смотрит предложение · 2 мин</div>
     <div class="stats">
@@ -764,9 +788,15 @@ tbody tr.hide{display:none}
     mgr:{t:'Менеджер',td:function(r){return '<td><div class="mgr"><span class="avatar" style="background:'+r.mgrc+'">'+escH(r.mgri)+'</span>'+escH(r.mgr)+'</div></td>'}},
     status:{t:'Статус',td:function(r){return '<td><span class="st '+r.st+'">'+escH(r.stt)+'</span></td>'}},
     date:{t:'Дата',td:function(r){return '<td class="dt">'+escH(r.date)+'</td>'}},
-    sum:{t:'Сумма, ₽',th:' style="text-align:right"',td:function(r){return '<td class="num">'+money(r.sum)+'</td>'}}
+    sum:{t:'Сумма, ₽',th:' style="text-align:right"',td:function(r){return '<td class="num">'+money(r.sum)+'</td>'}},
+    contact:{t:'Контакт',td:function(r){var live=r.st==='wait'||r.st==='new'||r.st==='seen',c=r.contactT&&live?(r.contactT<dayStart()?' class="dt ct-late" title="Контакт просрочен"':r.contactT<dayStart()+864e5?' class="dt ct-today" title="Контакт сегодня"':' class="dt"'):' class="dt"';return '<td'+c+'>'+escH(r.contact||'')+'</td>'}},
+    activity:{t:'Активность',td:function(r){return '<td class="dt">'+escH(r.activity||'')+'</td>'}},
+    comments:{t:'Комм.',th:' style="text-align:right"',td:function(r){return '<td class="num">'+escH(r.comments||'')+'</td>'}}
   };
-  var DEF=[['no',1],['title',1],['client',1],['mgr',1],['status',1],['date',1],['sum',1]];
+  function dayStart(){var d=new Date();d.setHours(0,0,0,0);return d.getTime()}
+  var DEF=[['no',1],['title',1],['client',1],['mgr',1],['status',1],['date',1],['sum',1],['contact',0],['activity',0],['comments',0]];
+  if(IS_REAL){var anyC=ROWS.some(function(r){return r.client}),anyS=ROWS.some(function(r){return r.sum>0}),anyK=ROWS.some(function(r){return +r.comments>0}),anyT=ROWS.some(function(r){return r.contact});
+    DEF=[['no',1],['title',1],['client',anyC?1:0],['mgr',1],['status',1],['contact',anyT?1:0],['activity',1],['date',1],['sum',anyS?1:0],['comments',anyK?1:0]]}
   function load(){try{var v=JSON.parse(localStorage.getItem(KEY));if(v&&v.length){var known=v.filter(function(c){return COLS[c[0]]});DEF.forEach(function(d){if(!known.some(function(c){return c[0]===d[0]}))known.push([d[0],0])});if(known.some(function(c){return c[1]}))return known}}catch(e){}return DEF.map(function(c){return c.slice()})}
   var cols=load();
   function save(){try{localStorage.setItem(KEY,JSON.stringify(cols))}catch(e){}}
@@ -790,7 +820,7 @@ tbody tr.hide{display:none}
     var vis=ROWS.filter(function(r){return removed.indexOf(r.no)<0});
     if(IS_REAL){vis=vis.filter(function(r){return flt==='all'||(flt==='my'&&r.mgr===meShort())||(flt==='wait'&&(r.st==='wait'||r.st==='seen'))});
       var pages=Math.max(1,Math.ceil(vis.length/PER));if(page>pages)page=pages;var from=(page-1)*PER,total=vis.length;vis=vis.slice(from,from+PER);
-      var sh=$('#shown');if(sh)sh.textContent=total?'Показано '+(from+1)+'–'+(from+vis.length)+' из '+money(total)+(flt!=='all'?' · фильтр «'+{my:'Мои',wait:'Ждут ответа'}[flt]+'»':''):'Нет КП'+(flt!=='all'?' по фильтру':'');
+      var sh=$('#shown');if(sh)sh.textContent=total?'Показано '+(from+1)+'–'+(from+vis.length)+' из '+money(total)+(flt!=='all'?' · фильтр «'+{my:'Мои',wait:'Активные'}[flt]+'»':''):'Нет КП'+(flt!=='all'?' по фильтру':'');
       var pg=$('#pager');if(pg){var ps=[],k;for(k=1;k<=pages;k++)if(k===1||k===pages||Math.abs(k-page)<=2)ps.push(k);else if(ps[ps.length-1]!=='…')ps.push('…');
         pg.innerHTML=ps.map(function(x){return x==='…'?'<a href="#" data-p="">…</a>':'<a href="#" data-p="'+x+'"'+(x===page?' class="on"':'')+'>'+x+'</a>'}).join('')}}
     t.tBodies[0].innerHTML=vis.map(function(r){return '<tr data-kp="'+escH(r.no)+'" data-client="'+escH(r.client)+'" data-mgr="'+escH(r.mgr)+'" data-st="'+r.st+'"'+(hidden.indexOf(r.no)>-1?' class="hide"':'')+'>'+on.map(function(c){return COLS[c[0]].td(r)}).join('')+ACT+'</tr>'}).join('');
@@ -813,7 +843,40 @@ tbody tr.hide{display:none}
   window.addEventListener('storage',function(e){if(e.key===RKEY){removed=removedList();render();syncSide()}});
   window.KBTable={render:render,cols:function(){return cols},remove:remove,restore:restore,restoreAll:restoreAll,removed:function(){return removed.slice()},rows:ROWS,real:IS_REAL,meShort:meShort,
     filter:function(f){flt=f;page=1;render()},go:function(p){if(!p)return;page=+p;render();var o=$('#offers-tbl');if(o)o.scrollIntoView({block:'nearest'})},
-    clients:function(){var m={};ROWS.forEach(function(r){m[r.no]=r.client});return m}};
+    clients:function(){var m={};ROWS.forEach(function(r){m[r.no]=r.client||r.title});return m},
+    fillDrawer:function(no){var dr=document.getElementById('drawer');if(!dr)return;dr.classList.toggle('is-real',IS_REAL);if(!IS_REAL)return;
+      var r=ROWS.filter(function(x){return x.no===String(no)})[0],box=document.getElementById('d-real');if(!r||!box){box&&(box.innerHTML='<div class="dr-n">КП не найдено в загруженных данных.</div>');return}
+      document.getElementById('d-cl').textContent=r.client||r.title;
+      var row=function(k,v){return v?'<span>'+k+'</span><b>'+escH(v)+'</b>':''};
+      box.innerHTML='<div class="dr-g">'+row('Проект',r.title)+row('Заказчик',r.client)+row('Ответственный',r.mgrFull||r.mgr)+row('Статус','')+(r.stt?'<span>Статус</span><b><span class="st '+r.st+'">'+escH(r.stt)+'</span></b>':'')+
+        row('Контакт',r.contact)+row('Последняя активность',r.activity)+row('Создано',r.date)+(r.sum>0?row('Сумма',money(r.sum)+' ₽'):'')+row('Комментариев',r.comments)+'</div>'+
+        '<div class="dr-b">'+(r.url?'<a class="btn dark" target="_blank" rel="noopener" href="'+escH(r.url)+'">Открыть в Битриксе</a>':'')+'<a class="btn" href="offer.html">Создать КП на основе</a></div>'+
+        '<div class="dr-n">Данные из Битрикса (только чтение). Аналитика просмотров клиентом появится, когда будет подключена к сайту.</div>'}};
+  /* реальные плитки, подзаголовок и «Что важно сегодня» */
+  (function(){if(!IS_REAL)return;
+    var now=new Date(),m0=new Date(now.getFullYear(),now.getMonth(),1).getTime(),p0=new Date(now.getFullYear(),now.getMonth()-1,1).getTime(),pSame=p0+(now.getTime()-m0),d90=now.getTime()-90*864e5,t0=dayStart(),t1=t0+864e5;
+    var MON=['январю','февралю','марту','апрелю','маю','июню','июлю','августу','сентябрю','октябрю','ноябрю','декабрю'];
+    var mine=ROWS,act=mine.filter(function(r){return r.st==='wait'||r.st==='new'||r.st==='seen'});
+    var cur=mine.filter(function(r){return r.t>=m0}).length,prev=mine.filter(function(r){return r.t>=p0&&r.t<pSame}).length;
+    var q=mine.filter(function(r){return r.t>=d90}),ok=q.filter(function(r){return r.st==='ok'}).length,lost=q.filter(function(r){return r.st==='lost'}).length;
+    var due=act.filter(function(r){return r.contactT&&r.contactT<t1}).sort(function(a,b){return a.contactT-b.contactT}),late=due.filter(function(r){return r.contactT<t0});
+    var tile=function(id,label,v,d,neg){var k=document.querySelector('[gs-id="'+id+'"] .kpi');if(!k)return;k.querySelector('small').textContent=label;k.querySelector('.v').textContent=v;
+      var dd=k.querySelector('.d');if(!dd){dd=document.createElement('div');dd.className='d';k.appendChild(dd)}dd.textContent=d;dd.classList.toggle('neg',!!neg);var bar=k.querySelector('.bar');if(bar)bar.style.display='none';var sp=k.querySelector('svg.spark-line,svg:not(.ic)');if(sp&&sp.closest('.kpi')===k&&!sp.classList.contains('spark'))sp.style.display='none'};
+    var pct=prev?Math.round((cur-prev)/prev*100):0;
+    tile('kpi-offers','КП за месяц',money(cur),prev?(pct>=0?'+':'−')+Math.abs(pct)+'% к '+MON[(now.getMonth()+11)%12]:'новых в этом месяце',pct<0);
+    var sumAct=act.reduce(function(a,r){return a+(+r.sum||0)},0);
+    if(sumAct>0)tile('kpi-sum','Сумма в работе',sumAct>=1e6?(Math.round(sumAct/1e5)/10+'').replace('.',',')+' млн':money(sumAct),'активных КП: '+money(act.length));
+    else tile('kpi-sum','Активных КП',money(act.length),'из '+money(mine.length)+' загруженных');
+    tile('kpi-conv','Конверсия в договор',(ok+lost?Math.round(ok/(ok+lost)*100):0)+'%','за 90 дней · договоров: '+ok);
+    tile('kpi-plan','Контакты на сегодня',money(due.length),late.length?'просрочено: '+late.length:'просроченных нет',late.length>0);
+    var sub=document.getElementById('greet-sub');if(sub)sub.textContent='Активных КП: '+money(act.length)+'. Контактов на сегодня: '+due.length+(late.length?' (просрочено '+late.length+')':'')+'.';
+    var card=document.querySelector('.card.ai');if(card){var hd=card.querySelector('.hd');card.innerHTML='';card.appendChild(hd);var hs=hd.querySelector('span');if(hs)hs.textContent='по данным Битрикса';
+      var list=due.slice(0,4);if(!list.length)list=act.slice().sort(function(a,b){return b.t-a.t}).slice(0,3);
+      card.insertAdjacentHTML('beforeend',list.length?list.map(function(r){var lateD=r.contactT&&r.contactT<t0?Math.round((t0-r.contactT)/864e5):0;
+        var why=r.contactT&&r.contactT<t1?(lateD?'Контакт просрочен на '+lateD+' дн.':'Контакт запланирован на сегодня'):'Свежее активное КП';
+        return '<div class="tip"><div class="dot"><svg class="ic"><use href="#i-phone"/></svg></div><div><p>'+why+': <b>№ '+escH(r.no)+'</b> «'+escH(r.title)+'»'+(r.mgr?' · '+escH(r.mgr):'')+'</p><div class="act"><button class="pri" data-open-kp="'+escH(r.no)+'">Открыть КП</button>'+(r.url?'<a class="btn" style="padding:4px 10px;font-size:12.5px" target="_blank" rel="noopener" href="'+escH(r.url)+'">В Битриксе</a>':'')+'</div></div></div>'}).join(''):'<p style="color:var(--text-3);margin:8px 0">На сегодня запланированных контактов нет.</p>')}
+    var fw=document.querySelector('#flt [data-f="wait"]');if(fw)fw.textContent='Активные';
+  })();
   /* кто вошёл и откуда данные: меню, приветствие, «Недавние», счётчики */
   (function(){
     if(ME){var av=document.querySelector('.side .me .avatar'),who=document.querySelector('.side .me .who');if(av)av.textContent=KBReal.initials(ME.name);if(who)who.innerHTML=escH(ME.name)+'<small>'+escH(ME.login||'Менеджер')+'</small>'}
@@ -871,14 +934,15 @@ tbody tr.hide{display:none}
   function show(t){toast.querySelector('span').textContent=t;toast.classList.add('show');clearTimeout(show.t);show.t=setTimeout(function(){toast.classList.remove('show')},2600)}
   function closeAll(){ovl.classList.remove('open');modal.classList.remove('open');drawer.classList.remove('open')}
   function openMax(o){cur=o;document.getElementById('mm-sub').textContent='КП № '+o.no+' · '+o.cl;document.getElementById('mm-lt').textContent='Коммерческое предложение № '+o.no;document.getElementById('mm-url').textContent='kupibas.ru/kp/'+token(+o.no);document.getElementById('mm-text').value=msg(o);drawer.classList.remove('open');ovl.classList.add('open');modal.classList.add('open')}
-  function openDrawer(o){cur=o;document.getElementById('d-no').textContent='КП № '+o.no;document.getElementById('d-cl').textContent=o.cl;ovl.classList.add('open');drawer.classList.add('open')}
+  window.KBOpenDrawer=function(o){openDrawer(o)};
+  function openDrawer(o){cur=o;document.getElementById('d-no').textContent='КП № '+o.no;document.getElementById('d-cl').textContent=o.cl;if(window.KBTable&&KBTable.fillDrawer)KBTable.fillDrawer(o.no);ovl.classList.add('open');drawer.classList.add('open')}
   function copy(t){try{navigator.clipboard.writeText(t)}catch(e){}}
   function rowData(el){var tr=el.closest('tr[data-kp]');return tr?{no:tr.dataset.kp,cl:tr.dataset.client.replace(/&laquo;|&raquo;/g,'')}:null}
   document.addEventListener('click',function(e){
     var t;
     if(t=e.target.closest('[data-max]')){e.stopPropagation();openMax(rowData(t));return}
     if(e.target.closest('[data-max-from-drawer]')){openMax(cur);return}
-    if(t=e.target.closest('[data-open-kp]')){openDrawer({no:'2417',cl:'Ирина Белова'});return}
+    if(t=e.target.closest('[data-open-kp]')){var kn=t.getAttribute('data-open-kp')||'2417',cm=window.KBTable&&KBTable.clients?KBTable.clients():{};openDrawer({no:kn,cl:cm[kn]||(kn==='2417'?'Ирина Белова':'')});return}
     if(e.target.closest('[data-close]')||e.target===ovl){closeAll();return}
     if(e.target.closest('#maxModal [data-copy]')){copy(document.getElementById('mm-text').value);closeAll();show('Сообщение со ссылкой скопировано');return}
     if(e.target.closest('#drawer [data-copy]')){copy('https://kupibas.ru/kp/'+token(+cur.no));show('Ссылка скопирована');return}
@@ -894,7 +958,7 @@ tbody tr.hide{display:none}
   function toast(t){var el=document.getElementById('toast');el.querySelector('span').textContent=t;var u=el.querySelector('[data-undo]');if(u){u.hidden=true;u.dataset.undo=''}el.classList.remove('has-undo');el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('show')},2600)}
   function token(no){var c='abcdefghjkmnpqrstuvwxyz23456789',t='';for(var i=0;i<6;i++)t+=c[(no*7+i*13)%c.length];return t}
   var CLIENTS=window.KBTable&&KBTable.real?KBTable.clients():{'2419':'Сергей Волков','2418':'ООО «Аквадом»','2417':'Ирина Белова','2416':'Коттедж «Сосны»','2415':'Павел Орлов','2412':'Гостиница «Лесная»','2409':'Кравец'};
-  function openKp(no){var tr=$('tr[data-kp="'+no+'"]');if(tr){tr.click();return}var b=$('[data-open-kp]');b.click();$('#d-no').textContent='КП № '+no;$('#d-cl').textContent=CLIENTS[no]||''}
+  function openKp(no){var tr=$('tr[data-kp="'+no+'"]');if(tr){tr.click();return}if(window.KBOpenDrawer){KBOpenDrawer({no:String(no),cl:CLIENTS[no]||''});return}var b=$('[data-open-kp]');b.click();$('#d-no').textContent='КП № '+no;$('#d-cl').textContent=CLIENTS[no]||''}
   /* фильтр таблицы */
   function applyFilter(f){if(window.KBTable&&KBTable.real){KBTable.filter(f);return}var n=0;$$('tbody tr[data-kp]').forEach(function(tr){var mgr=tr.dataset.mgr===(window.KBTable?KBTable.meShort():'Анна К.'),wait=tr.dataset.st==='wait'||tr.dataset.st==='seen';
     var show=f==='all'||(f==='my'&&mgr)||(f==='wait'&&wait);tr.classList.toggle('hide',!show);if(show)n++});
@@ -983,8 +1047,14 @@ tbody tr.hide{display:none}
   var KEY='kb-dash-v1',dashEl=$('#dash');if(!dashEl||!window.GridStack)return;
   function toast(t){var el=$('#toast');el.querySelector('span').textContent=t;var u=el.querySelector('[data-undo]');if(u){u.hidden=true;u.dataset.undo=''}el.classList.remove('has-undo');el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('show')},2600)}
   var items={};$$('.grid-stack-item',dashEl).forEach(function(el){items[el.getAttribute('gs-id')]={el:el,title:el.dataset.title}});
-  var grid=GridStack.init({column:12,cellHeight:76,margin:7,staticGrid:true,handle:'.w-handle',animate:true,float:true,
-    columnOpts:{breakpoints:[{w:700,c:1},{w:1000,c:6}],layout:'moveScale'}},dashEl);
+  /* узкий экран (6 или 1 колонка): блоки в том же порядке, плотно, без дыр; широкие — во всю ширину, плитки по две в ряд */
+  function kbPack(col,oldCol,out,src){var sky=[],i;for(i=0;i<col;i++)sky.push(0);
+    src.slice().sort(function(a,b){return (a.y-b.y)||(a.x-b.x)}).forEach(function(n){
+      var f=n.w/oldCol,w=col===1?1:f>=0.66?col:f>=0.25?Math.ceil(col/2):Math.max(1,Math.round(f*col)),want=Math.round(n.x*col/oldCol),best=null,x,y,k;
+      for(x=0;x<=col-w;x++){y=0;for(k=x;k<x+w;k++)y=Math.max(y,sky[k]);if(!best||y<best.y||(y===best.y&&Math.abs(x-want)<Math.abs(best.x-want)))best={x:x,y:y}}
+      n.x=best.x;n.y=best.y;n.w=w;for(k=best.x;k<best.x+w;k++)sky[k]=best.y+n.h;out.push(n)});
+    src.length=0}
+  var grid=GridStack.init({column:12,cellHeight:76,margin:7,staticGrid:true,handle:'.w-handle',animate:true,float:true},dashEl);
   var DEFAULT=grid.save(false).map(function(n){return {id:n.id,x:n.x,y:n.y,w:n.w,h:n.h}});
   var hidden={};
   function state(){try{return JSON.parse(localStorage.getItem(KEY))||null}catch(e){return null}}
@@ -997,6 +1067,10 @@ tbody tr.hide{display:none}
   function setEdit(on){grid.setStatic(!on);dashEl.classList.toggle('editing',on);document.body.classList.toggle('editing-on',on);var b=$('[data-dash-edit]');b.querySelector('span').textContent=on?'Готово':'Настроить';b.classList.toggle('pri',on)}
   function colw(){dashEl.style.setProperty('--colw',(dashEl.clientWidth/grid.getColumn())+'px')}colw();window.addEventListener('resize',colw);
   apply(state());renderLib();
+  /* адаптивность: сетка всегда создаётся на 12 колонок с вашей раскладкой, на узком столе переключается на 6 / 1 */
+  function wantCols(){var w=dashEl.clientWidth;return w<=700?1:w<=1000?6:12}
+  function respond(){var c=wantCols();if(c!==grid.getColumn()){grid.column(c,kbPack);colw();requestAnimationFrame(fitAll)}}
+  respond();var rT;window.addEventListener('resize',function(){clearTimeout(rT);rT=setTimeout(respond,120)});
   grid.on('change',persist);grid.on('added removed',function(){});
   document.addEventListener('click',function(e){var t,el=e.target;
     if(el.closest('[data-dash-edit]')){var on=!dashEl.classList.contains('editing');setEdit(on);if(!on){persist();toast('Раскладка сохранена')}return}

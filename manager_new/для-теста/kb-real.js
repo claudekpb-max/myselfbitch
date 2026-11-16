@@ -62,7 +62,9 @@
     client: ['заказчик', 'клиент', 'покупатель', 'контрагент', 'customer', 'client'], phone: ['телефон', 'phone'], addr: ['адрес', 'address', 'объект'],
     mgr: ['менеджер', 'ответственн', 'автор', 'создал', 'manager', 'created_by', 'responsible'], status: ['статус', 'состояни', 'status', 'stage'],
     sum: ['сумма', 'итого', 'стоимость', 'цена', 'total', 'sum', 'price', 'opportunity'], date: ['дата созд', 'создано', 'дата', 'date', 'created'],
-    cur: ['валют', 'currency'] };
+    cur: ['валют', 'currency'],
+    activity: ['последняя активн', 'дата изменен', 'изменен', 'timestamp'], contact: ['запланированного контакт', 'дата контакт', 'следующий контакт'],
+    comments: ['количество комментар', 'комментар'], url: ['ссылка', 'url', 'link'] };
   function mapCols(head, dict) {
     var h = head.map(low), m = {}, used = {};
     Object.keys(dict).forEach(function (f) {
@@ -101,10 +103,10 @@
   function status(v) {
     var s = low(v);
     if (!s || /черн/.test(s)) return '';
-    if (/отказ|архив|проигр|отмен|закрыт без/.test(s)) return 'lost';
+    if (/отказ|архив|проигр|отмен|закрыт/.test(s) && !/договор|заказ/.test(s)) return 'lost';
     if (/заказ|принят|оплач|выигр|договор|успеш|согласов/.test(s)) return 'ok';
     if (/просм|откры|прочит/.test(s)) return 'seen';
-    if (/жд|ожида|отправ|выслан|на рассмотр/.test(s)) return 'wait';
+    if (/жд|ожида|отправ|выслан|на рассмотр|активн|в работе/.test(s)) return 'wait';
     if (/нов/.test(s)) return 'new';
     return 'wait';
   }
@@ -117,7 +119,8 @@
   function offerFrom(r, m) {
     var g = function (f) { return m[f] != null ? norm(r[m[f]]) : ''; }, d = date(g('date')), mgr = g('mgr').replace(/^\[\d+\]\s*/, '').replace(/\s*\(.*\)$/, '');
     return { no: g('no'), title: g('title'), client: g('client'), phone: g('phone'), addr: g('addr'), mgrFull: mgr, st: status(g('status')), stt: g('status') || 'Черновик',
-      sum: money(g('sum')), cur: g('cur'), date: d.s, t: d.t };
+      sum: money(g('sum')), cur: g('cur'), date: d.s, t: d.t,
+      activity: date(g('activity')).s, contact: date(g('contact')).s, contactT: date(g('contact')).t, comments: g('comments'), url: g('url') };
   }
 
   function importTexts(files) {

@@ -165,3 +165,11 @@
 
 /* тема меняется сразу во всех открытых вкладках прототипа */
 window.addEventListener('storage', function (e) { if (e.key === 'kb-theme-v2' && e.newValue) document.documentElement.setAttribute('data-theme', e.newValue === 'dark' ? 'dark' : 'light'); });
+/* счётчик «Предложения» в меню — из загруженных реальных данных (если есть) */
+document.addEventListener('DOMContentLoaded', function () {
+  try {
+    var d = JSON.parse(localStorage.getItem('kb-real-v1') || 'null'), n = d && d.offers && d.offers.length;
+    if (!n) return;
+    [].forEach.call(document.querySelectorAll('.nav a[href$="#offers"] .cnt'), function (c) { c.textContent = String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); });
+  } catch (e) {}
+});

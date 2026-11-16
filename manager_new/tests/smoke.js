@@ -534,6 +534,18 @@ async function testDash(ctx, label, mobile) {
     const clipped = r.out.filter(x => x.clip).map(x => x.id); assert(clipped.length === 0, 'обрезано: ' + clipped.join(','));
     await page.evaluate(() => document.querySelector('.dash-tools [data-dash-reset]').click());
   });
+  await check(page, label, 'средняя ширина (6 колонок): блоки видны, не налезают, своя раскладка возвращается', async () => {
+    if (mobile) return;
+    const L = () => page.evaluate(() => [...document.querySelectorAll('#dash .grid-stack-item')].map(e => e.getAttribute('gs-id') + '@' + e.getAttribute('gs-x') + ',' + e.getAttribute('gs-y') + ',' + e.getAttribute('gs-w')).join(' '));
+    const before = await L(); const vp = page.viewportSize();
+    await page.setViewportSize({ width: 1200, height: vp.height }); await page.waitForTimeout(700);
+    const r = await page.evaluate(() => { const it = [...document.querySelectorAll('#dash .grid-stack-item')].map(e => { const b = e.getBoundingClientRect(); return { id: e.getAttribute('gs-id'), x: b.x, y: b.y, w: b.width, h: b.height }; });
+      const ov = []; for (let i = 0; i < it.length; i++) for (let j = i + 1; j < it.length; j++) { const a = it[i], c = it[j]; if (a.x < c.x + c.w - 2 && c.x < a.x + a.w - 2 && a.y < c.y + c.h - 2 && c.y < a.y + a.h - 2) ov.push(a.id + '×' + c.id); }
+      return { cols: KBDash.grid.getColumn(), zero: it.filter(x => x.w < 50).map(x => x.id), ov }; });
+    await page.setViewportSize(vp); await page.waitForTimeout(700);
+    assert(r.cols === 6, 'колонок ' + r.cols); assert(!r.zero.length, 'нулевая ширина: ' + r.zero.join(',')); assert(!r.ov.length, 'налезают: ' + r.ov.join(','));
+    assert((await L()) === before, 'раскладка не вернулась');
+  });
   await check(page, label, 'рабочий стол во всю ширину', async () => {
     const w = await page.evaluate(() => [document.querySelector('#dash').getBoundingClientRect().width, document.querySelector('.main').clientWidth]);
     assert(w[0] >= w[1] - 60, `стол ${w[0]} из ${w[1]}`);
