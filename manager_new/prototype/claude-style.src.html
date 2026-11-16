@@ -387,6 +387,11 @@ tbody tr.hide{display:none}
 .d-real .dr-g span{color:var(--text-3)}
 .d-real .dr-g b{font-weight:500;word-break:break-word}
 .d-real .dr-b{display:flex;gap:8px;flex-wrap:wrap}.d-real .dr-b .btn{padding:8px 13px;font-size:13.5px}
+.d-real .dr-c span{display:block;color:var(--text-3);font-size:12.5px;margin-bottom:4px}.d-real .dr-c p{margin:0;font-size:13.5px;line-height:1.5;white-space:pre-wrap}
+.d-real .dr-pos{border:1px solid var(--line);border-radius:12px;overflow:hidden}.d-real .dr-pt{padding:8px 12px;font-size:12.5px;color:var(--text-3);background:var(--surface-2)}
+.d-real .dr-pos table{width:100%;border-collapse:collapse;font-size:13px}.d-real .dr-pos td{padding:6px 12px;border-top:1px solid var(--line);vertical-align:top}
+.d-real .dr-pos td.q{white-space:nowrap;color:var(--text-2)}.d-real .dr-pos td.s{text-align:right;white-space:nowrap;font-family:var(--mono)}.d-real .dr-pos tr.grp td{font-weight:600;background:var(--surface-2)}
+.d-real .dr-g a{color:var(--accent)}
 .d-real .dr-n{font-size:12.5px;color:var(--text-3);line-height:1.5}
 .ct-late{color:#b5432f;font-weight:500}.ct-today{color:var(--warn);font-weight:500}
 .dh{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}
@@ -788,14 +793,28 @@ tbody tr.hide{display:none}
     mgr:{t:'Менеджер',td:function(r){return '<td><div class="mgr"><span class="avatar" style="background:'+r.mgrc+'">'+escH(r.mgri)+'</span>'+escH(r.mgr)+'</div></td>'}},
     status:{t:'Статус',td:function(r){return '<td><span class="st '+r.st+'">'+escH(r.stt)+'</span></td>'}},
     date:{t:'Дата',td:function(r){return '<td class="dt">'+escH(r.date)+'</td>'}},
-    sum:{t:'Сумма, ₽',th:' style="text-align:right"',td:function(r){return '<td class="num">'+money(r.sum)+'</td>'}},
+    sum:{t:'Сумма, ₽',th:' style="text-align:right"',td:function(r){return '<td class="num">'+(IS_REAL&&!(r.sum>0)?'':money(r.sum))+'</td>'}},
     contact:{t:'Контакт',td:function(r){var live=r.st==='wait'||r.st==='new'||r.st==='seen',c=r.contactT&&live?(r.contactT<dayStart()?' class="dt ct-late" title="Контакт просрочен"':r.contactT<dayStart()+864e5?' class="dt ct-today" title="Контакт сегодня"':' class="dt"'):' class="dt"';return '<td'+c+'>'+escH(r.contact||'')+'</td>'}},
     activity:{t:'Активность',td:function(r){return '<td class="dt">'+escH(r.activity||'')+'</td>'}},
     comments:{t:'Комм.',th:' style="text-align:right"',td:function(r){return '<td class="num">'+escH(r.comments||'')+'</td>'}}
   };
   function dayStart(){var d=new Date();d.setHours(0,0,0,0);return d.getTime()}
+  /* заказчик и сумма КП — из самого КП (api.php?what=sums), запоминаем до изменения КП */
+  var SKEY='kb-offer-sums-v1',SUMS={},sumsOff=false,pending={};
+  try{SUMS=JSON.parse(localStorage.getItem(SKEY)||'{}')||{}}catch(e){SUMS={}}
+  function applySums(){ROWS.forEach(function(r){var c=SUMS[r.no];if(!c||(r.actRaw&&c.ts&&c.ts!==r.actRaw))return;if(c.c)r.client=c.c;if(c.p)r.phone=c.p;if(c.s!=null)r.sum=c.s})}
+  function enrich(vis){if(!IS_REAL||sumsOff||!window.KB_BITRIX_USER||!window.fetch)return;
+    var need=vis.filter(function(r){var c=SUMS[r.no];return !pending[r.no]&&(!c||(r.actRaw&&c.ts!==r.actRaw))}).map(function(r){return r.no}).slice(0,40);if(!need.length)return;
+    need.forEach(function(n){pending[n]=1});
+    fetch('api.php?what=sums&ids='+need.join(','),{credentials:'same-origin',headers:{Accept:'application/json'}}).then(function(r){if(r.status===501){sumsOff=true;return null}return r.json()}).then(function(j){
+      need.forEach(function(n){delete pending[n]});if(!j||!j.offers)return;
+      Object.keys(j.offers).forEach(function(n){var o=j.offers[n];SUMS[n]={c:o.customer||'',p:o.phone||'',s:o.total,ts:o.ts||''}});
+      need.forEach(function(n){if(!j.offers[n]){var rr=ROWS.filter(function(x){return x.no===n})[0];SUMS[n]={c:'',p:'',s:null,ts:rr&&rr.actRaw||''}}});
+      try{var ks=Object.keys(SUMS);if(ks.length>3000)ks.slice(0,ks.length-3000).forEach(function(k){delete SUMS[k]});localStorage.setItem(SKEY,JSON.stringify(SUMS))}catch(e){}
+      applySums();render()}).catch(function(){need.forEach(function(n){delete pending[n]})})}
+  applySums();
   var DEF=[['no',1],['title',1],['client',1],['mgr',1],['status',1],['date',1],['sum',1],['contact',0],['activity',0],['comments',0]];
-  if(IS_REAL){var anyC=ROWS.some(function(r){return r.client}),anyS=ROWS.some(function(r){return r.sum>0}),anyK=ROWS.some(function(r){return +r.comments>0}),anyT=ROWS.some(function(r){return r.contact});
+  if(IS_REAL){var ON_SITE=!!window.KB_BITRIX_USER,anyC=ON_SITE||ROWS.some(function(r){return r.client}),anyS=ON_SITE||ROWS.some(function(r){return r.sum>0}),anyK=ROWS.some(function(r){return +r.comments>0}),anyT=ROWS.some(function(r){return r.contact});
     DEF=[['no',1],['title',1],['client',anyC?1:0],['mgr',1],['status',1],['contact',anyT?1:0],['activity',1],['date',1],['sum',anyS?1:0],['comments',anyK?1:0]]}
   function load(){try{var v=JSON.parse(localStorage.getItem(KEY));if(v&&v.length){var known=v.filter(function(c){return COLS[c[0]]});DEF.forEach(function(d){if(!known.some(function(c){return c[0]===d[0]}))known.push([d[0],0])});if(known.some(function(c){return c[1]}))return known}}catch(e){}return DEF.map(function(c){return c.slice()})}
   var cols=load();
@@ -825,7 +844,7 @@ tbody tr.hide{display:none}
         pg.innerHTML=ps.map(function(x){return x==='…'?'<a href="#" data-p="">…</a>':'<a href="#" data-p="'+x+'"'+(x===page?' class="on"':'')+'>'+x+'</a>'}).join('')}}
     t.tBodies[0].innerHTML=vis.map(function(r){return '<tr data-kp="'+escH(r.no)+'" data-client="'+escH(r.client)+'" data-mgr="'+escH(r.mgr)+'" data-st="'+r.st+'"'+(hidden.indexOf(r.no)>-1?' class="hide"':'')+'>'+on.map(function(c){return COLS[c[0]].td(r)}).join('')+ACT+'</tr>'}).join('');
     var list=$('#cp-list');if(list)list.innerHTML=cols.map(function(c,i){return '<div class="cp-row"><label><input type="checkbox" data-col-on="'+c[0]+'"'+(c[1]?' checked':'')+'>'+COLS[c[0]].t+'</label><button class="icon-btn" data-col-up="'+i+'" title="Выше"'+(i===0?' disabled':'')+'>↑</button><button class="icon-btn" data-col-down="'+i+'" title="Ниже"'+(i===cols.length-1?' disabled':'')+'>↓</button></div>'}).join('');
-    rmInfo();
+    rmInfo();enrich(vis);
     if(window.KBDash&&KBDash.fitAll)requestAnimationFrame(KBDash.fitAll);
   }
   document.addEventListener('click',function(e){var t,el=e.target;
@@ -849,9 +868,19 @@ tbody tr.hide{display:none}
       document.getElementById('d-cl').textContent=r.client||r.title;
       var row=function(k,v){return v?'<span>'+k+'</span><b>'+escH(v)+'</b>':''};
       box.innerHTML='<div class="dr-g">'+row('Проект',r.title)+row('Заказчик',r.client)+row('Ответственный',r.mgrFull||r.mgr)+row('Статус','')+(r.stt?'<span>Статус</span><b><span class="st '+r.st+'">'+escH(r.stt)+'</span></b>':'')+
-        row('Контакт',r.contact)+row('Последняя активность',r.activity)+row('Создано',r.date)+(r.sum>0?row('Сумма',money(r.sum)+' ₽'):'')+row('Комментариев',r.comments)+'</div>'+
+        row('Контакт',r.contact)+row('Последняя активность',r.activity)+row('Создано',r.date)+(r.sum>0&&!window.KB_BITRIX_USER?row('Сумма',money(r.sum)+' ₽'):'')+row('Комментариев',r.comments)+'</div>'+
         '<div class="dr-b">'+(r.url?'<a class="btn dark" target="_blank" rel="noopener" href="'+escH(r.url)+'">Открыть в Битриксе</a>':'')+'<a class="btn" href="offer.html">Создать КП на основе</a></div>'+
-        '<div class="dr-n">Данные из Битрикса (только чтение). Аналитика просмотров клиентом появится, когда будет подключена к сайту.</div>'}};
+        '<div id="dr-full"></div><div class="dr-n">Данные из Битрикса (только чтение). Аналитика просмотров клиентом появится, когда будет подключена к сайту.</div>';
+      var hadCl=!!r.client;if(!window.KB_BITRIX_USER||!window.fetch)return;var full=document.getElementById('dr-full');full.innerHTML='<div class="dr-n">Загружаю КП…</div>';
+      fetch('api.php?what=offer&id='+encodeURIComponent(r.no),{credentials:'same-origin',headers:{Accept:'application/json'}}).then(function(x){return x.json()}).then(function(j){
+        var o=j&&j.offers&&j.offers[r.no];if(!o){full.innerHTML=j&&j.error?'<div class="dr-n">'+escH(j.error)+'</div>':'';return}
+        if(o.customer&&!r.client){r.client=o.customer;document.getElementById('d-cl').textContent=o.customer}if(o.total!=null)r.sum=o.total;
+        var g='<div class="dr-g">'+(hadCl?'':row('Заказчик',o.customer))+(o.phone?'<span>Телефон</span><b><a href="tel:'+escH(o.phone.replace(/[^\d+]/g,''))+'">'+escH(o.phone)+'</a></b>':'')+
+          (o.email?'<span>Email</span><b><a href="mailto:'+escH(o.email)+'">'+escH(o.email)+'</a></b>':'')+row('Объект',o.address)+row('Подготовил',o.performer)+row('Курс €',o.rate)+(o.total!=null?'<span>Итого</span><b style="font-size:16px">'+money(o.total)+' ₽</b>':'')+'</div>';
+        if(o.comment)g+='<div class="dr-c"><span>Пожелания клиента</span><p>'+escH(o.comment)+'</p></div>';
+        var rows=(o.rows||[]).filter(function(x){return x.name});
+        if(rows.length){g+='<div class="dr-pos"><div class="dr-pt">Позиции · '+o.positions+'</div><table>'+rows.slice(0,40).map(function(x){return x.group?'<tr class="grp"><td colspan="3">'+escH(x.name)+'</td></tr>':'<tr><td>'+escH(x.name)+'</td><td class="q">'+(x.qty!=null?(x.qty+'').replace('.',',')+(x.unit?' '+escH(x.unit):''):'')+'</td><td class="s">'+(x.sum!=null?money(x.sum):'')+'</td></tr>'}).join('')+'</table>'+(rows.length>40?'<div class="dr-n">и ещё '+(rows.length-40)+' — полностью в рабочем менеджере</div>':'')+'</div>'}
+        full.innerHTML=g;render()}).catch(function(){full.innerHTML='<div class="dr-n">Не удалось загрузить КП.</div>'})}};
   /* реальные плитки, подзаголовок и «Что важно сегодня» */
   (function(){if(!IS_REAL)return;
     var now=new Date(),m0=new Date(now.getFullYear(),now.getMonth(),1).getTime(),p0=new Date(now.getFullYear(),now.getMonth()-1,1).getTime(),pSame=p0+(now.getTime()-m0),d90=now.getTime()-90*864e5,t0=dayStart(),t1=t0+864e5;
@@ -859,7 +888,7 @@ tbody tr.hide{display:none}
     var mine=ROWS,act=mine.filter(function(r){return r.st==='wait'||r.st==='new'||r.st==='seen'});
     var cur=mine.filter(function(r){return r.t>=m0}).length,prev=mine.filter(function(r){return r.t>=p0&&r.t<pSame}).length;
     var q=mine.filter(function(r){return r.t>=d90}),ok=q.filter(function(r){return r.st==='ok'}).length,lost=q.filter(function(r){return r.st==='lost'}).length;
-    var due=act.filter(function(r){return r.contactT&&r.contactT<t1}).sort(function(a,b){return a.contactT-b.contactT}),late=due.filter(function(r){return r.contactT<t0});
+    var d30=t0-30*864e5,today=act.filter(function(r){return r.contactT>=t0&&r.contactT<t1}),late=act.filter(function(r){return r.contactT&&r.contactT<t0&&r.contactT>=d30}).sort(function(a,b){return b.contactT-a.contactT}),old=act.filter(function(r){return r.contactT&&r.contactT<d30}).length,due=today.concat(late);
     var tile=function(id,label,v,d,neg){var k=document.querySelector('[gs-id="'+id+'"] .kpi');if(!k)return;k.querySelector('small').textContent=label;k.querySelector('.v').textContent=v;
       var dd=k.querySelector('.d');if(!dd){dd=document.createElement('div');dd.className='d';k.appendChild(dd)}dd.textContent=d;dd.classList.toggle('neg',!!neg);var bar=k.querySelector('.bar');if(bar)bar.style.display='none';var sp=k.querySelector('svg.spark-line,svg:not(.ic)');if(sp&&sp.closest('.kpi')===k&&!sp.classList.contains('spark'))sp.style.display='none'};
     var pct=prev?Math.round((cur-prev)/prev*100):0;
@@ -868,8 +897,8 @@ tbody tr.hide{display:none}
     if(sumAct>0)tile('kpi-sum','Сумма в работе',sumAct>=1e6?(Math.round(sumAct/1e5)/10+'').replace('.',',')+' млн':money(sumAct),'активных КП: '+money(act.length));
     else tile('kpi-sum','Активных КП',money(act.length),'из '+money(mine.length)+' загруженных');
     tile('kpi-conv','Конверсия в договор',(ok+lost?Math.round(ok/(ok+lost)*100):0)+'%','за 90 дней · договоров: '+ok);
-    tile('kpi-plan','Контакты на сегодня',money(due.length),late.length?'просрочено: '+late.length:'просроченных нет',late.length>0);
-    var sub=document.getElementById('greet-sub');if(sub)sub.textContent='Активных КП: '+money(act.length)+'. Контактов на сегодня: '+due.length+(late.length?' (просрочено '+late.length+')':'')+'.';
+    tile('kpi-plan','Контакты на сегодня',money(today.length),late.length?'просрочено за 30 дней: '+late.length:'просроченных за 30 дней нет',late.length>0);
+    var sub=document.getElementById('greet-sub');if(sub)sub.textContent='Активных КП: '+money(act.length)+'. Контактов на сегодня: '+today.length+(late.length?', просрочено за 30 дней: '+late.length:'')+(old?'. Давно просроченных (старше 30 дней): '+money(old):'')+'.';
     var card=document.querySelector('.card.ai');if(card){var hd=card.querySelector('.hd');card.innerHTML='';card.appendChild(hd);var hs=hd.querySelector('span');if(hs)hs.textContent='по данным Битрикса';
       var list=due.slice(0,4);if(!list.length)list=act.slice().sort(function(a,b){return b.t-a.t}).slice(0,3);
       card.insertAdjacentHTML('beforeend',list.length?list.map(function(r){var lateD=r.contactT&&r.contactT<t0?Math.round((t0-r.contactT)/864e5):0;
