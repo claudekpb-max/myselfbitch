@@ -695,6 +695,20 @@ async function testShelf(ctx, label) {
     assert((await rows()).length === 5, 'не вернулись все');
     assert(!(await page.$eval('.recent [data-kp-open="2419"]', a => a.hidden)), 'в «Недавних» не вернулось');
   });
+  await check(page, label, 'перенос настроек: «Скопировать» → очистить → «Вставить» возвращает раскладку и тему', async () => {
+    await page.evaluate(() => { KBDash.grid.update(document.querySelector('[gs-id="tasks"]'), { x: 0 }); localStorage.setItem('kb-theme-v2', 'dark'); const c = { prov: 'openai', keys: { openai: 'sk-SECRET' } }; localStorage.setItem('kb-ai-cfg-v1', JSON.stringify(c)); });
+    await page.click('[data-dash-edit]'); await page.click('[data-dash-edit]'); await page.waitForTimeout(150);
+    const want = await page.evaluate(() => localStorage.getItem('kb-dash-v1'));
+    await page.evaluate(() => { document.querySelector('#rd').classList.add('open'); document.querySelector('[data-set-copy]').click(); });
+    const code = await page.$eval('#set-box', e => e.value);
+    assert(/^KB1:/.test(code) && !Buffer.from(code.slice(4), 'base64').toString('utf8').includes('sk-SECRET'), 'код или ключ ИИ в коде');
+    await page.evaluate(() => ['kb-dash-v1', 'kb-theme-v2'].forEach(k => localStorage.removeItem(k)));
+    await page.evaluate(() => document.querySelector('[data-set-paste]').click()); await page.fill('#set-box', code);
+    await page.evaluate(() => document.querySelector('[data-set-apply]').click()); await page.waitForLoadState('load'); await page.waitForTimeout(900);
+    const got = await page.evaluate(() => [localStorage.getItem('kb-dash-v1'), document.documentElement.getAttribute('data-theme'), JSON.parse(localStorage.getItem('kb-ai-cfg-v1')).keys.openai]);
+    assert(got[0] === want && got[1] === 'dark' && got[2] === 'sk-SECRET', JSON.stringify(got.slice(1)));
+    await page.evaluate(() => ['kb-dash-v1', 'kb-theme-v2', 'kb-ai-cfg-v1'].forEach(k => localStorage.removeItem(k))); await page.reload(); await page.waitForTimeout(300);
+  });
   await check(page, label, 'при удалении никаких запросов наружу (Битрикс не трогаем)', async () => assert(ext.length === 0, ext.join(' | ')));
   await check(page, label, 'нет JS-ошибок', async () => assert(p.errors.length === 0, p.errors.join(' | ')));
   await page.evaluate(() => ['kb-offers-removed-v1', 'kb-theme-v2'].forEach(k => localStorage.removeItem(k)));
