@@ -41,3 +41,46 @@ if (count($kbParts) > 1) {
 }
 header('Content-Type: text/html; charset=utf-8');
 header('Cache-Control: no-store');
+
+/* ---------- настройки интерфейса на сервере ----------
+   у каждого пользователя свои (CUserOptions — профиль пользователя Битрикса),
+   общие «по умолчанию» задаёт администратор (COption, модуль kb.manager_new).
+   КП и другие данные не затрагиваются. */
+define('KB_SET_CAT', 'kb.manager_new');
+$KB_SET_KEYS = array('kb-dash-v1', 'kb-offers-cols-v1', 'kb-offers-removed-v1', 'kb-theme-v2', 'kb-side-off',
+    'kb-works-v1', 'kb-cat-accepted-v1', 'kb-offer-draft-v1', 'kb-ai-cfg-v1');
+function kb_set_clean($items)
+{
+    global $KB_SET_KEYS;
+    $out = array();
+    if (!is_array($items)) return $out;
+    foreach ($KB_SET_KEYS as $k) {
+        if (!isset($items[$k]) || !is_string($items[$k])) continue;
+        $v = $items[$k];
+        if ($k === 'kb-ai-cfg-v1') { /* ключи API на сервер не сохраняем */
+            $c = json_decode($v, true);
+            if (is_array($c)) { unset($c['keys']); $v = json_encode($c, JSON_UNESCAPED_UNICODE); }
+        }
+        $out[$k] = $v;
+    }
+    if (strlen(json_encode($out)) > 60000) unset($out['kb-offer-draft-v1']);
+    if (strlen(json_encode($out)) > 60000) unset($out['kb-works-v1']);
+    return $out;
+}
+function kb_set_user()
+{
+    global $USER;
+    $v = CUserOptions::GetOption(KB_SET_CAT, 'settings', false, $USER->GetID());
+    return is_array($v) ? $v : array();
+}
+function kb_set_defaults()
+{
+    $v = json_decode(COption::GetOptionString(KB_SET_CAT, 'defaults', ''), true);
+    return is_array($v) ? $v : array();
+}
+function kb_set_boot()
+{
+    global $USER, $KB_SET_KEYS;
+    return array('user' => (object)kb_set_user(), 'def' => (object)kb_set_defaults(), 'admin' => (bool)$USER->IsAdmin(),
+        'sessid' => bitrix_sessid(), 'keys' => $KB_SET_KEYS);
+}

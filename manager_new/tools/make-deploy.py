@@ -26,6 +26,11 @@ USER_JS = ("<script>window.KB_BITRIX_USER=<?= json_encode($KB_USER, JSON_UNESCAP
            "var w=m.querySelector('.who')||a&&a.nextElementSibling;if(w){w.textContent=u.name;var s=document.createElement('small');s.textContent=u.login||'Менеджер';w.appendChild(s)}})});</script>\n")
 
 
+# настройки интерфейса с сервера — самым первым скриптом страницы
+SET_JS = ("<script>window.KB_SRV=<?= json_encode(kb_set_boot(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;</script>"
+          "<script src=\"kb-settings.js\"></script>")
+
+
 def main():
     # assets для копии рабочего менеджера
     os.makedirs(os.path.join(D, 'assets'), exist_ok=True)
@@ -37,6 +42,8 @@ def main():
     os.makedirs(NEW)
     shutil.copy(os.path.join(ROOT, 'deploy', 'guard.php'), os.path.join(NEW, 'guard.php'))
     shutil.copy(os.path.join(ROOT, 'deploy', 'api.php'), os.path.join(NEW, 'api.php'))
+    for f in ['settings.php', 'kb-settings.js']:
+        shutil.copy(os.path.join(ROOT, 'deploy', f), os.path.join(NEW, f))
     for f in STATIC:
         src = open(os.path.join(P, f), 'rb').read()
         if f.endswith('.js'):
@@ -48,6 +55,8 @@ def main():
         html = LINK.sub(lambda m: NAME[m.group(1)], html)
         html = html.replace('<?', '&lt;?') if '<?' in html else html  # в html не должно быть PHP-тегов
         html = re.sub(r'(<body[^>]*>)', lambda m: m.group(1) + '\n' + USER_JS, html, count=1)
+        html = re.sub(r'(<meta charset=[^>]*>)', lambda m: m.group(1) + '\n' + SET_JS, html, count=1, flags=re.I)
+        assert SET_JS in html, src
         open(os.path.join(NEW, dst), 'w', encoding='utf-8').write(HEAD + html)
     # архив
     z = os.path.join(ROOT, 'deploy', 'manager_new.zip')

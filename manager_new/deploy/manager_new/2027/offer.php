@@ -3,6 +3,7 @@
 <html lang="ru" data-theme="light">
 <head>
 <meta charset="UTF-8">
+<script>window.KB_SRV=<?= json_encode(kb_set_boot(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;</script><script src="kb-settings.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Новое предложение · Купибас</title>
 <script>(function(){var t=null;try{t=localStorage.getItem('kb-theme-v2')}catch(e){}document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'light')})();</script>

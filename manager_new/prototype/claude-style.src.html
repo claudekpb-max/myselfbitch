@@ -414,6 +414,7 @@ tbody tr.hide{display:none}
 .rd-help{color:var(--text-3);font-size:12.5px;line-height:1.6}.rd-help li{margin:2px 0}
 .rd-set{border-top:1px solid var(--line);padding-top:12px;color:var(--text-2);line-height:1.55}.rd-set b{color:var(--text)}
 .rd-set-b{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.rd-set-b .btn{padding:7px 12px;font-size:13px}
+.rd-srv{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--ok-soft);color:var(--text-2)}.rd-srv b{color:var(--text)}
 #set-box{width:100%;min-height:90px;margin-top:8px;padding:9px 11px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);color:var(--text);font:12px var(--mono);resize:vertical;box-sizing:border-box}
 .rd-rep{font-family:var(--mono);font-size:12px;white-space:pre-wrap;color:var(--text-2);max-height:140px;overflow:auto}
 .rd-ft{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--line);background:var(--surface-2);flex-wrap:wrap}
@@ -704,6 +705,8 @@ tbody tr.hide{display:none}
         <div class="rd-set-b"><button class="btn" data-set-copy>Скопировать мои настройки</button><button class="btn" data-set-paste>Вставить настройки</button></div>
         <textarea id="set-box" hidden spellcheck="false" placeholder="Вставьте сюда код настроек (начинается с KB1:)"></textarea>
         <div class="rd-set-b"><button class="btn dark" data-set-apply hidden>Применить настройки</button></div>
+        <div class="rd-srv" id="rd-srv" hidden><div class="rd-srv-t">✓ На сайте ваши настройки хранятся <b>на сервере, в вашем профиле</b>, и сохраняются автоматически: они одинаковы в любом браузере и на любом компьютере.</div>
+          <div class="rd-set-b"><button class="btn" data-srv-reset>Сбросить мои к общим</button><button class="btn" data-srv-def hidden>Сделать мои настройки общими для всех</button><button class="btn" data-srv-undef hidden>Убрать общие</button></div></div>
       </div>
     </div>
     <div class="rd-ft"><button class="btn" data-rd-demo>Вернуть демо-данные</button><button class="btn dark" data-rd-close>Готово</button></div>
@@ -905,7 +908,7 @@ tbody tr.hide{display:none}
   function toastUndo(t,no){toast(t);var el=$('#toast'),u=el.querySelector('[data-undo]');u.hidden=false;u.dataset.undo=no;el.classList.add('has-undo');clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove('show','has-undo');u.hidden=true},6000)}
   function rdState(){var d=KBReal.data(),me=KBReal.me(),st=$('#rd-st');
     st.innerHTML=d?'Загружено: <b>'+(d.users||[]).length+'</b> пользователей и <b>'+(d.offers||[]).length+'</b> КП · '+new Date(d.at).toLocaleString('ru-RU')+'<br>Файлы: '+(d.files||[]).join(', ').replace(/[<>&]/g,'')+(me?'<br>Вы вошли как <b>'+me.name.replace(/[<>&]/g,'')+'</b>':(d.users&&d.users.length?'<br>Чтобы войти под собой — экран «Вход» → «Войти как»':'')):'Сейчас на рабочем столе <b>демо-данные</b>. Загрузите выгрузку из Битрикса — таблица КП, клиенты, менеджеры и вход «под собой» станут реальными.'}
-  function rdOpen(){rdState();$('#rd-rep').hidden=true;$('#set-box').hidden=true;$('[data-set-apply]').hidden=true;$('#rd').classList.add('open')}
+  function rdOpen(){var K=window.KBSettings;if(K&&$('#rd-srv')){$('#rd-srv').hidden=false;$('[data-srv-def]').hidden=!K.admin;$('[data-srv-undef]').hidden=!K.admin||!K.hasDefault()}rdState();$('#rd-rep').hidden=true;$('#set-box').hidden=true;$('[data-set-apply]').hidden=true;$('#rd').classList.add('open')}
   /* перенос своих настроек между адресами: раскладка блоков, колонки, тема, справочник, черновик КП. Ключи ИИ не переносим. */
   var SET_KEYS=['kb-dash-v1','kb-offers-cols-v1','kb-offers-removed-v1','kb-theme-v2','kb-side-off','kb-works-v1','kb-cat-accepted-v1','kb-offer-draft-v1','kb-ai-cfg-v1'];
   function setExport(){var o={};SET_KEYS.forEach(function(k){try{var v=localStorage.getItem(k);if(v==null)return;if(k==='kb-ai-cfg-v1'){var c=JSON.parse(v);delete c.keys;v=JSON.stringify(c)}o[k]=v}catch(e){}});
@@ -949,6 +952,9 @@ tbody tr.hide{display:none}
     if(el.closest('[data-set-paste]')){var bx=$('#set-box');bx.value='';bx.hidden=false;$('[data-set-apply]').hidden=false;bx.focus();
       try{navigator.clipboard.readText().then(function(t){if(/^\s*KB1:/.test(t))bx.value=t.trim()},function(){})}catch(x){}return}
     if(el.closest('[data-set-apply]')){try{var n=setImport($('#set-box').value);toast('Настройки применены ('+n+') — обновляю');setTimeout(function(){location.reload()},700)}catch(er){toast('Не получилось: '+er.message)}return}
+    if(el.closest('[data-srv-reset]')){if(!confirm('Удалить ваши настройки с сервера и взять общие (по умолчанию)?'))return;KBSettings.reset().then(function(){toast('Ваши настройки сброшены — обновляю');setTimeout(function(){location.reload()},700)},function(er){toast('Не получилось: '+er.message)});return}
+    if(el.closest('[data-srv-def]')){if(!confirm('Сделать ваши текущие настройки (раскладка, колонки, тема…) общими по умолчанию для всех, у кого нет своих?'))return;KBSettings.saveDefault().then(function(){toast('Готово: ваши настройки теперь общие по умолчанию')},function(er){toast('Не получилось: '+er.message)});return}
+    if(el.closest('[data-srv-undef]')){if(!confirm('Убрать общие настройки по умолчанию?'))return;KBSettings.clearDefault().then(function(){toast('Общие настройки убраны')},function(er){toast('Не получилось: '+er.message)});return}
     if(el.closest('[data-rd-demo]')){if(!confirm('Убрать загруженные данные из этого браузера и вернуть демо?'))return;KBReal.clear();location.reload();return}
     if(t=el.closest('[data-row-del]')){e.stopPropagation();var dn=t.closest('tr').dataset.kp;KBTable.remove(dn);toastUndo('КП № '+dn+' убрано из списка. В Битриксе оно не удалено',dn);return}
     if(t=el.closest('[data-undo]')){var un=t.dataset.undo;if(un){KBTable.restore(un);toast('КП № '+un+' снова в списке')}return}
