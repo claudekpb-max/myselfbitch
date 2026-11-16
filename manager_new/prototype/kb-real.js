@@ -136,17 +136,57 @@
     });
     return { users: users, offers: offers, report: report };
   }
-  function finish(res, names) {
+  function finish(res, names, src) {
     var prev = load(KEY) || { users: [], offers: [] }, byId = {};
     var users = (res.users.length ? res.users : prev.users || []);
     var offers = res.offers.length ? res.offers : prev.offers || [];
     offers.forEach(function (o, i) { if (!o.no) o.no = String(i + 1); byId[o.no] = o; });
     offers = Object.keys(byId).map(function (k) { return byId[k]; }).sort(function (a, b) { return (b.t - a.t) || (+b.no - +a.no) || 0; });
     offers.forEach(function (o) { var m = o.mgrFull || ''; o.mgr = short(m) || '—'; o.mgri = initials(m || '?'); o.mgrc = COLORS[hash(m) % COLORS.length]; if (!o.title) o.title = o.client ? 'КП для ' + o.client : 'КП № ' + o.no; });
-    var data = { users: users, offers: offers, files: names, at: Date.now() };
+    var data = { users: users, offers: offers, files: names, at: Date.now(), src: src || 'file' };
     if (!save(KEY, data)) throw new Error('Не хватило места в хранилище браузера — выгрузите меньше КП (например, за последний год)');
     return { data: data, report: res.report };
   }
+
+  /* ответ api.php (Битрикс): строки КП с русскими названиями полей → общий формат */
+  function fromBitrix(j) {
+    var offers = [], users = [];
+    if (j.offers && j.offers.length) {
+      var head = j.fields && j.fields.length ? j.fields : Object.keys(j.offers[0]);
+      var mo = mapCols(head, O);
+      offers = j.offers.map(function (o) { return offerFrom(head.map(function (k) { return o[k] == null ? '' : String(o[k]); }), mo); })
+        .filter(function (o) { return o.no || o.client || o.sum; });
+    }
+    if (j.users && j.users.length) {
+      var uh = Object.keys(j.users[0]), mu = mapCols(uh, U);
+      users = j.users.map(function (u) { return userFrom(uh.map(function (k) { return u[k] == null ? '' : String(u[k]); }), mu); }).filter(function (u) { return u.name; });
+    }
+    return { users: users, offers: offers, report: ['Битрикс: «' + (j.iblockName || 'инфоблок ' + j.iblock) + '», КП ' + offers.length] };
+  }
+  function bxNote(text) {
+    var el = document.getElementById('toast'); if (!el) return;
+    var sp = el.querySelector('span'); if (sp) sp.textContent = text; el.classList.add('show');
+    setTimeout(function () { el.classList.remove('show'); }, 6000);
+  }
+  /* на сайте: КП из Битрикса через api.php (только чтение), обновление раз в 5 минут */
+  function syncBitrix() {
+    if (!window.KB_BITRIX_USER || !window.fetch) return;
+    var cur = load(KEY), FRESH = 5 * 60 * 1000;
+    if (cur && cur.src === 'bitrix' && Date.now() - cur.at < FRESH) return;
+    var sig = function (d) { return d && d.src === 'bitrix' ? d.offers.length + ':' + ((d.offers[0] || {}).no || '') + ':' + ((d.offers[0] || {}).stt || '') : ''; };
+    fetch('api.php', { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.text().then(function (t) { var j; try { j = JSON.parse(t); } catch (e) { throw new Error('ответ не JSON (' + r.status + ')'); } if (!r.ok || j.error) throw new Error(j.error || ('ошибка ' + r.status)); return j; }); })
+      .then(function (j) {
+        var before = sig(cur), d = finish(fromBitrix(j), ['Битрикс: ' + (j.iblockName || 'инфоблок ' + j.iblock)], 'bitrix').data, after = sig(d);
+        window.KB_BITRIX_INFO = { iblock: j.iblock, iblockName: j.iblockName, iblocks: j.iblocks, fields: j.fields, count: d.offers.length };
+        if (before !== after) {
+          var flag = null; try { flag = sessionStorage.getItem('kb-bx-sig'); sessionStorage.setItem('kb-bx-sig', after); } catch (e) {}
+          if (flag !== after) location.reload();
+        }
+      })
+      .catch(function (e) { window.KB_BITRIX_ERROR = e.message; if (window.console) console.warn('[КП из Битрикса]', e); bxNote('Не удалось загрузить КП из Битрикса: ' + e.message); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', syncBitrix); else setTimeout(syncBitrix, 0);
 
   window.KBReal = {
     data: function () { var d = load(KEY); return d && (d.offers && d.offers.length || d.users && d.users.length) ? d : null; },
@@ -169,6 +209,7 @@
         return finish(res, list.map(function (x) { return x.name; }));
       });
     },
-    importTexts: function (list) { return finish(importTexts(list), list.map(function (x) { return x.name; })); }
+    importTexts: function (list) { return finish(importTexts(list), list.map(function (x) { return x.name; })); },
+    fromBitrix: fromBitrix, sync: syncBitrix
   };
 })();

@@ -36,6 +36,7 @@ def main():
         shutil.rmtree(NEW)
     os.makedirs(NEW)
     shutil.copy(os.path.join(ROOT, 'deploy', 'guard.php'), os.path.join(NEW, 'guard.php'))
+    shutil.copy(os.path.join(ROOT, 'deploy', 'api.php'), os.path.join(NEW, 'api.php'))
     for f in STATIC:
         src = open(os.path.join(P, f), 'rb').read()
         if f.endswith('.js'):
