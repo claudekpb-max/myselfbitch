@@ -60,6 +60,7 @@ function kb_offer_summary($d, $full)
 {
     $d = is_array($d) ? $d : array();
     $fio = trim(implode(' ', array_filter(array(kb_pick($d, array('customer_lastname')), kb_pick($d, array('customer')), kb_pick($d, array('customer_secondname'))))));
+    if ($fio === '') $fio = trim((string)kb_pick($d, array('customer_fio')));
     $out = array('customer' => kb_scalar($fio), 'phone' => kb_scalar(kb_pick($d, array('phone'))));
     $rows = array(); $total = 0.0; $have = false;
     $recs = isset($d['records']) && is_array($d['records']) ? $d['records'] : array();
