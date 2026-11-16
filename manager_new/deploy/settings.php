@@ -1,6 +1,6 @@
 <?php
 /**
- * /manager_new/2027/settings.php — настройки интерфейса на сервере.
+ * /manager_new/settings.php — настройки интерфейса на сервере.
  *   GET                         — мои настройки и общие по умолчанию
  *   POST ?sessid=…&action=save          {items:{…}} — сохранить мои
  *   POST ?sessid=…&action=reset                     — удалить мои (будут общие)

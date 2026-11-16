@@ -28,6 +28,7 @@
 - На kupibas.ru делаем рабочую копию `/manager/` → `/manager_new/` (инструкция: `manager_new/deploy/ИНСТРУКЦИЯ.md`, файлы: `manager_new/deploy/manager_new/`, сборка `tools/make-deploy.sh`).
 - `/manager/` — **только чтение**: его файлы, общий шаблон сайта, компоненты и модули не меняем.
 - `/manager_new/` — полноценная работа с общей базой (создание/правка КП разрешены; изменения видны и в `/manager/`). Перед выкладкой — резервная копия; откат — удалить папку `/manager_new/`.
+- Новый интерфейс лежит **прямо в `/manager_new/`** (без подпапки 2027): index.php, offer.php, spravochnik.php, kp.php, api.php (КП из Битрикса, только чтение, с учётом `USER_IS_LIMITED`), settings.php (настройки пользователей на сервере), guard.php + ip-allow.php (доступ по IP и входу). Старая копия рабочего стола — `/manager_new/index-old.php`. Сборка: `tools/make-deploy.sh` → `deploy/manager_new.zip`.
 
 ## Боевые сайты
 - Изменения на боевых kupibas.ru / собственный-пляж.рф — только после согласования с владельцем и с планом отката.

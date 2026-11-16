@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Собирает комплект для сайта: deploy/manager_new/ и архив deploy/manager_new.zip.
 
-  assets/  — слой дизайна для копии рабочего менеджера (/manager_new/ и /manager_new/table/)
-  2027/    — новый интерфейс (рабочий стол, конструктор КП, справочник, КП клиента, ИИ-помощник)
-             страницы .php: проверка IP + вход в Битрикс (guard.php), имя пользователя из Битрикса.
+  новый интерфейс прямо в /manager_new/: рабочий стол (index.php), конструктор КП, справочник, КП клиента, ИИ-помощник;
+  страницы .php: проверка IP (ip-allow.php) + вход в Битрикс (guard.php), имя пользователя из Битрикса.
 Архив распаковывается в /manager_new/ через админку Битрикса. /manager/ не затрагивается.
 """
 import os, re, shutil, zipfile
@@ -11,7 +10,7 @@ import os, re, shutil, zipfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 P = os.path.join(ROOT, 'prototype')
 D = os.path.join(ROOT, 'deploy', 'manager_new')
-NEW = os.path.join(D, '2027')
+NEW = D
 
 PAGES = {'manager-claude.html': 'index.php', 'offer.html': 'offer.php', 'spravochnik.html': 'spravochnik.php', 'kp.html': 'kp.php'}
 STATIC = ['kb-data.js', 'kb-ui.css', 'kb-real.js', 'ai-assistant.js', 'ai-assistant.css', 'logo.png']
@@ -32,11 +31,7 @@ SET_JS = ("<script>window.KB_SRV=<?= json_encode(kb_set_boot(), JSON_UNESCAPED_U
 
 
 def main():
-    # assets для копии рабочего менеджера
-    os.makedirs(os.path.join(D, 'assets'), exist_ok=True)
-    for f in ['manager-2027.css', 'manager-2027.js']:
-        shutil.copy(os.path.join(P, f), os.path.join(D, 'assets', f))
-    # новый интерфейс
+    # новый интерфейс — прямо в /manager_new/
     if os.path.isdir(NEW):
         shutil.rmtree(NEW)
     os.makedirs(NEW)
@@ -63,8 +58,6 @@ def main():
     with zipfile.ZipFile(z, 'w', zipfile.ZIP_DEFLATED) as zf:
         for base, _, files in os.walk(D):
             for f in sorted(files):
-                if f == 'подключение.php.txt':
-                    continue
                 full = os.path.join(base, f)
                 zf.write(full, os.path.relpath(full, D))
     print('deploy/manager_new и deploy/manager_new.zip обновлены (%d КБ)' % (os.path.getsize(z) // 1024))

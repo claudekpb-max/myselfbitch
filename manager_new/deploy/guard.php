@@ -1,7 +1,7 @@
 <?php
 /**
- * /manager_new/2027/guard.php — защита страниц нового интерфейса.
- * Подключается первой строкой в каждой странице /manager_new/2027/*.php.
+ * /manager_new/guard.php — защита страниц нового интерфейса.
+ * Подключается первой строкой в каждой странице /manager_new/*.php.
  *
  * 1) Доступ только с разрешённых IP. Список — в соседнем файле ip-allow.php (его нет в архиве,
  *    поэтому обновление архивом его не затирает):
@@ -10,7 +10,7 @@
  *    Пока ip-allow.php нет — пускаем только вошедших в Битрикс (без проверки IP).
  * 2) Только для вошедших в Битрикс пользователей — иначе на страницу входа /manager_new/.
  *
- * Файлы /manager/ не затрагиваются. Откат: удалить папку /manager_new/2027/.
+ * Файлы /manager/ не затрагиваются. Откат: вернуть старый index.php из index-old.php.
  */
 $KB_ALLOW_IP = is_file(__DIR__ . '/ip-allow.php') ? (array)include __DIR__ . '/ip-allow.php' : array();
 
@@ -25,7 +25,7 @@ if (count($KB_ALLOW_IP) && !in_array($kbIp, $KB_ALLOW_IP, true)) {
 require_once $_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_before.php';
 global $USER;
 if (!is_object($USER) || !$USER->IsAuthorized()) {
-    LocalRedirect('/manager_new/?back_url=' . urlencode($_SERVER['REQUEST_URI']));
+    LocalRedirect('/manager/?back_url=' . urlencode($_SERVER['REQUEST_URI'])); /* вход — через страницу входа рабочего менеджера */
     exit;
 }
 /* имя вошедшего пользователя — для рабочего стола (вместо демо-имени) */
