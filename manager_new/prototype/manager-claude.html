@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Рабочий стол · Купибас</title>
 <script>
+(function(){try{if(/[?&]reset\b/.test(location.search)){['kb-dash-v1','kb-offers-cols-v1','kb-side-off','kb-offers-removed-v1'].forEach(function(k){localStorage.removeItem(k)});history.replaceState(null,'',location.pathname+location.hash)}}catch(e){}})();
 (function(){var t=null;try{t=localStorage.getItem('kb-theme-v2')}catch(e){}
 document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'light');})();
 </script>
@@ -763,7 +764,7 @@ tbody tr.hide{display:none}
     sum:{t:'Сумма, ₽',th:' style="text-align:right"',td:function(r){return '<td class="num">'+money(r.sum)+'</td>'}}
   };
   var DEF=[['no',1],['title',1],['client',1],['mgr',1],['status',1],['date',1],['sum',1]];
-  function load(){try{var v=JSON.parse(localStorage.getItem(KEY));if(v&&v.length){var known=v.filter(function(c){return COLS[c[0]]});DEF.forEach(function(d){if(!known.some(function(c){return c[0]===d[0]}))known.push([d[0],0])});return known}}catch(e){}return DEF.map(function(c){return c.slice()})}
+  function load(){try{var v=JSON.parse(localStorage.getItem(KEY));if(v&&v.length){var known=v.filter(function(c){return COLS[c[0]]});DEF.forEach(function(d){if(!known.some(function(c){return c[0]===d[0]}))known.push([d[0],0])});if(known.some(function(c){return c[1]}))return known}}catch(e){}return DEF.map(function(c){return c.slice()})}
   var cols=load();
   function save(){try{localStorage.setItem(KEY,JSON.stringify(cols))}catch(e){}}
   var ACT='<td><div class="row-act"><button class="icon-btn max-btn" title="Отправить в МАКС" data-max><svg class="ic"><use href="#i-send"/></svg></button><button class="icon-btn" title="PDF" data-row-pdf><svg class="ic"><use href="#i-pdf"/></svg></button><button class="icon-btn" title="Копировать ссылку" data-row-copy><svg class="ic"><use href="#i-copy"/></svg></button><button class="icon-btn" title="Создать на основе" data-row-dup><svg class="ic"><use href="#i-more"/></svg></button><button class="icon-btn del-btn" title="Убрать из списка (в Битриксе не удаляется)" data-row-del><svg class="ic"><use href="#i-trash"/></svg></button></div></td>';
